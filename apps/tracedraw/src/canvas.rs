@@ -457,13 +457,23 @@ fn draw_page(app: &App, painter: &Painter, rect: ERect, preview: Option<Affine>)
     // copies (the canvas outlines them in red); a revision of its own so
     // the picture is not taken for the full one.
     let without_copies = app.symmetry_without_copies();
-    let doc: &Document = without_copies.as_deref().unwrap_or(app.doc());
+    // The stitch views of the Embroidery workspace: the objects that sew
+    // show as their stitches, the others as vectors.
+    let vectors = without_copies
+        .is_none()
+        .then(|| crate::modela_embroidery::vector_doc(app, painter.ctx()))
+        .flatten();
+    let doc: &Document = without_copies
+        .as_deref()
+        .or(vectors.as_deref())
+        .unwrap_or(app.doc());
     let revision = app.engine.revision()
         ^ if without_copies.is_some() {
             1u64 << 62
         } else {
             0
-        };
+        }
+        ^ if vectors.is_some() { 1u64 << 61 } else { 0 };
     // Paragraph text being resized keeps its letters while the frame
     // follows the drag (the text flows anew on release).
     let preview_ids = preview.map(|t| {
@@ -513,7 +523,9 @@ fn draw_page(app: &App, painter: &Painter, rect: ERect, preview: Option<Affine>)
             Tokens::page_shadow(),
         );
     }
-    painter.rect_filled(paper, 0.0, Tokens::PAGE);
+    let paper_color =
+        crate::modela_embroidery::page_color(app, painter.ctx()).unwrap_or(Tokens::PAGE);
+    painter.rect_filled(paper, 0.0, paper_color);
     if app.show_page_border {
         painter.rect_stroke(
             paper,

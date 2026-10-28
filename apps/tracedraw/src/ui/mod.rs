@@ -833,6 +833,7 @@ pub(crate) fn drawing_window(app: &mut App, ui: &mut Ui, full: egui::Rect) {
         && !rulers::ruler_drag(app, ui)
         && !app.comments_pointer(&response)
         && !app.perspective_pointer(&response)
+        && !crate::modela_embroidery::handles_pointer(app, &response)
     {
         app.canvas_input(&response, mods);
     }
@@ -1009,13 +1010,12 @@ pub(crate) fn view_navigator(app: &mut App, ui: &mut Ui, corner: egui::Rect, can
 
 #[cfg(test)]
 mod tests {
-    /// One browser wheel notch (100 pixels, or three lines at egui's
-    /// web line speed of 8 points) zooms 15 %, as a desktop notch
-    /// does; it zoomed about 5.7 times or 52 % at once (#1016).
+    /// A touchpad's two fingers are told from a mouse wheel's notch by
+    /// the units and sizes of their scroll.
     #[test]
     fn a_touchpad_scroll_is_told_from_a_wheel_notch() {
-        use egui::MouseWheelUnit::{Line, Point};
         use egui::vec2;
+        use egui::MouseWheelUnit::{Line, Point};
         // The desktop: a touchpad scrolls in points or in parts of lines.
         assert!(super::touchpad_wheel(Point, vec2(0.0, 3.5), false));
         assert!(super::touchpad_wheel(Line, vec2(0.0, 0.25), false));
@@ -1026,6 +1026,9 @@ mod tests {
         assert!(super::touchpad_wheel(Point, vec2(4.0, 1.0), true));
     }
 
+    /// One browser wheel notch (100 pixels, or three lines at egui's
+    /// web line speed of 8 points) zooms 15 %, as a desktop notch
+    /// does; it zoomed about 5.7 times or 52 % at once (#1016).
     #[test]
     fn a_browser_wheel_notch_zooms_as_a_desktop_notch() {
         use egui::MouseWheelUnit::{Line, Page, Point};

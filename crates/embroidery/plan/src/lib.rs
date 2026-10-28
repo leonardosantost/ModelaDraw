@@ -2,8 +2,9 @@
 //!
 //! The plan decides everything between and around the objects' own stitches:
 //! - travel to each object (and each separate part inside one) as a jump, trimmed first when
-//!   longer than [`PlanSettings::trim_at`], or, where fills sewn later will cover the way, as
-//!   running stitches under them (no trim, no loose thread);
+//!   longer than [`PlanSettings::trim_at`], or, where objects sewn later will cover the way, as
+//!   running stitches under them (no trim, no loose thread): straight when the whole line is
+//!   covered, else round inside one later object both ends touch;
 //! - tie-ins where the thread starts and tie-offs before it is cut, so stitches don't unravel;
 //! - a colour change whenever the thread changes;
 //! - stitches longer than a machine can sew split into pieces, and needle-wearing tiny stitches
@@ -239,6 +240,21 @@ impl Planner<'_> {
             self.last_dir = unit(to - from);
             return;
         }
+        if self.sewing
+            && d > self.s.min_stitch
+            && let Some(way) = way_under(from, to, later)
+        {
+            let mut prev = from;
+            for p in way {
+                let n = ((prev.distance(p) / TRAVEL_STITCH).ceil() as usize).clamp(1, 10_000);
+                for k in 1..=n {
+                    self.push(prev.lerp(p, k as f64 / n as f64), Command::Stitch);
+                }
+                self.last_dir = unit(p - prev).or(self.last_dir);
+                prev = p;
+            }
+            return;
+        }
         if self.sewing && d > self.s.trim_at {
             self.cut(Command::Trim);
         }
@@ -311,6 +327,31 @@ fn covered(a: Point, b: Point, covers: &[Option<Cover>]) -> bool {
         let p = a.lerp(b, t / d);
         covers.iter().any(|c| c.contains(p))
     })
+}
+
+/// A way from `a` to `b` hidden under one object sewn later whose area both ends lie in or touch
+/// (within [`TRAVEL_END_SLACK`]): inside it, round its edge where the straight line would leave
+/// it. The shortest such way, as the points after `a`.
+fn way_under(a: Point, b: Point, covers: &[Option<Cover>]) -> Option<Vec<Point>> {
+    use tracedraw_emb_stitch::travel;
+    let touches = |c: &Cover, p: Point| c.contains(p) || travel::near_edge(c.rings, p, TRAVEL_END_SLACK);
+    let mut best: Option<(f64, Vec<Point>)> = None;
+    for c in covers.iter().flatten() {
+        if !touches(c, a) || !touches(c, b) {
+            continue;
+        }
+        let Some(way) = travel::inside_way(c.rings, a, b) else { continue };
+        let mut prev = a;
+        let mut length = 0.0;
+        for p in &way {
+            length += prev.distance(*p);
+            prev = *p;
+        }
+        if best.as_ref().is_none_or(|(bl, _)| length < *bl) {
+            best = Some((length, way));
+        }
+    }
+    best.map(|(_, w)| w)
 }
 
 fn unit(v: kurbo::Vec2) -> Option<kurbo::Vec2> {
@@ -457,5 +498,41 @@ mod tests {
         let d = plan(&[], &PlanSettings::default(), "x");
         assert_eq!(d.stitches.len(), 1);
         assert!(tracedraw_emb_formats::Format::Dst.write(&d).is_ok());
+    }
+    #[test]
+    fn travel_goes_round_inside_a_later_object_when_the_straight_way_leaves_it() {
+        let p = Point::new;
+        // An L sewn second: a stem up the left, a bar along the top (y down: its far end is at
+        // the bottom right). The first object ends at the stem's foot; the L starts at the
+        // bar's far end, across its empty corner.
+        let ell = Polyline::new(vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 30.0), p(40.0, 30.0), p(40.0, 40.0), p(0.0, 40.0)], true);
+        let first = PlanObject {
+            stitches: [p(5.0, -10.0), p(7.0, -5.0), p(9.0, -0.3)].into_iter().map(|q| Stitch::new(q, StitchKind::Top)).collect(),
+            thread: thread([200, 0, 0]),
+            cover: vec![],
+        };
+        let second = PlanObject {
+            stitches: [p(39.0, 31.0), p(30.0, 35.0), p(5.0, 35.0)].into_iter().map(|q| Stitch::new(q, StitchKind::Top)).collect(),
+            thread: thread([200, 0, 0]),
+            cover: vec![ell.clone()],
+        };
+        let objs = [first, second];
+        let d = plan(&objs, &no_center(), "x");
+        assert_eq!(d.trims(), 0, "hidden under the L, no cut");
+        assert!(!d.stitches.iter().skip(1).any(|s| s.command == Command::Jump));
+        // Every stitch of the way lies in the L or on its edge.
+        let (_, kinds) = plan_kinds(&objs, &no_center(), "x");
+        for (s, k) in d.stitches.iter().zip(&kinds) {
+            if *k == StitchKind::Travel && s.command == Command::Stitch {
+                let q = p(s.x, s.y);
+                assert!(
+                    tracedraw_emb_stitch::travel::contains(std::slice::from_ref(&ell), q)
+                        || tracedraw_emb_stitch::travel::near_edge(std::slice::from_ref(&ell), q, 0.7),
+                    "{q:?}"
+                );
+            }
+        }
+        // Without travel under, the old way: a cut.
+        assert_eq!(plan(&objs, &PlanSettings { travel_under: false, ..no_center() }, "x").trims(), 1);
     }
 }

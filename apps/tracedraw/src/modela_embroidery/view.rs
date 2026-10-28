@@ -15,6 +15,9 @@ pub const VECTOR: u8 = 0;
 pub const STITCHES: u8 = 1;
 pub const REALISTIC: u8 = 2;
 
+/// A jump without a cut (the thread lies across the fabric) is drawn in
+/// this.
+pub const LOOSE: Color32 = Color32::from_rgba_unmultiplied_const(214, 140, 0, 220);
 /// Stitches past the field's edge are drawn in this.
 pub const OUTSIDE: Color32 = Color32::from_rgb(220, 38, 38);
 /// A stitch may end this far past the edge (a machine file's rounding), mm.
@@ -199,7 +202,10 @@ pub fn stitches(
 ) -> Option<Pos2> {
     let cull = painter.clip_rect().expand(8.0);
     let width = (THREAD_MM as f32 * zoom).max(if look.realistic { 1.0 } else { 0.6 });
-    let jump = Stroke::new(1.0, Color32::from_rgba_unmultiplied(120, 120, 120, 160));
+    // A move with the thread cut first leaves nothing: dashed. One without
+    // a cut leaves the thread lying across: solid, in amber.
+    let cut = Stroke::new(1.0, Color32::from_rgba_unmultiplied(120, 120, 120, 150));
+    let loose = Stroke::new(1.4, LOOSE);
     let n = look.sewn.min(pv.stitches.len());
     let mut shadows: Vec<EShape> = vec![];
     let mut bodies: Vec<EShape> = Vec::with_capacity(n);
@@ -211,7 +217,11 @@ pub fn stitches(
             let near = cull.contains(a) || cull.contains(p);
             if !s.sew {
                 if look.show_jumps && !s.underlay && near && a.distance(p) > 0.5 {
-                    bodies.push(EShape::line_segment([a, p], jump));
+                    if s.trim {
+                        bodies.extend(EShape::dashed_line(&[a, p], cut, 4.0, 3.0));
+                    } else {
+                        bodies.push(EShape::line_segment([a, p], loose));
+                    }
                 }
             } else if near && !(s.underlay && !look.show_underlay) {
                 let rgb = pv.threads.get(s.thread).copied().unwrap_or([0, 0, 0]);

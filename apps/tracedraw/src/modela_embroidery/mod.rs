@@ -14,6 +14,7 @@ pub mod sew;
 mod view;
 
 use std::cell::RefCell;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::app::App;
@@ -22,8 +23,8 @@ use crate::theme::Tokens;
 use egui::{Color32, Painter, Pos2, Stroke as EStroke, Ui};
 use icons::Icon;
 use sew::{DesignSettings, Part, Preview, Slot, Slots};
-use tracedraw_core::geometry::{Affine, Size};
-use tracedraw_core::{Color, Command, Fill, Shape, ShapeId, ShapeKind, Stroke};
+use tracedraw_core::geometry::{Affine, Point, Size};
+use tracedraw_core::{Color, Command, Document, Fill, Shape, ShapeId, ShapeKind, Stroke};
 use tracedraw_emb_formats::{hoops, Format};
 use tracedraw_emb_stitch::{medial, StitchSettings, StitchType, FABRICS};
 
@@ -166,6 +167,57 @@ fn problems(app: &App, p: &Prefs) -> Arc<Vec<check::Problem>> {
     cached(app, p, |c| c.problems.clone())
 }
 
+thread_local! {
+    /// The drawing the vector render shows in the stitch views, for the
+    /// last drawing state asked for.
+    static VECTOR: RefCell<Option<(CacheKey, Option<Rc<Document>>)>> = const { RefCell::new(None) };
+}
+
+/// Whether the canvas shows a stitch view (Stitches or Realistic) of the
+/// Embroidery workspace.
+fn stitch_view(app: &App, p: &Prefs) -> bool {
+    app.workspace == crate::app::Workspace::Embroidery && p.view != view::VECTOR
+}
+
+/// In the stitch views, the drawing the vector render shows: the objects
+/// that sew left out, as they show as their stitches, and every other
+/// object as the vector it is. `None` when the drawing shows whole (the
+/// vector view, another workspace, or nothing sews). Made once per state
+/// of the drawing.
+pub fn vector_doc(app: &App, ctx: &egui::Context) -> Option<Rc<Document>> {
+    let p = prefs(ctx);
+    if !stitch_view(app, &p) {
+        return None;
+    }
+    let key = cache_key(app, &p);
+    if let Some(d) = VECTOR.with(|c| {
+        c.borrow()
+            .as_ref()
+            .filter(|(k, _)| *k == key)
+            .map(|(_, d)| d.clone())
+    }) {
+        return d;
+    }
+    let pv = preview(app, &p);
+    let doc = (!pv.parts.is_empty()).then(|| {
+        let mut doc = app.doc().clone();
+        for part in &pv.parts {
+            if let Some(s) = doc.find_shape_mut(part.id) {
+                s.visible = false;
+            }
+        }
+        Rc::new(doc)
+    });
+    VECTOR.with(|c| *c.borrow_mut() = Some((key, doc.clone())));
+    doc
+}
+
+/// The page's colour: the fabric in the stitch views.
+pub fn page_color(app: &App, ctx: &egui::Context) -> Option<Color32> {
+    let p = prefs(ctx);
+    stitch_view(app, &p).then(|| view::fabric(p.view == view::REALISTIC))
+}
+
 fn rgb(c: [u8; 3]) -> Color32 {
     Color32::from_rgb(c[0], c[1], c[2])
 }
@@ -225,7 +277,6 @@ pub fn draw_stitches(app: &App, painter: &Painter) {
     if p.view != view::VECTOR {
         let pl = player(painter.ctx());
         let realistic = p.view == view::REALISTIC;
-        painter.rect_filled(painter.clip_rect(), 0.0, view::fabric(realistic));
         let look = view::Look {
             realistic,
             show_jumps: p.show_jumps,
@@ -252,6 +303,7 @@ pub fn draw_stitches(app: &App, painter: &Painter) {
     if p.mark_problems {
         draw_problems(app, painter, &p);
     }
+    draw_handles(app, painter, &pv);
 }
 
 fn draw_density(
@@ -320,6 +372,15 @@ fn sew_collect(s: &Shape, out: &mut Vec<Shape>) {
 
 /// Store `new` on each object (and its outline width), as one undo step.
 fn store(app: &mut App, label: &'static str, edits: Vec<(Shape, Slots, bool)>) {
+    let cmds = store_commands(edits);
+    if !cmds.is_empty() {
+        let _ = app.run_batch_keeping_lines(label, &cmds);
+    }
+}
+
+/// The commands that store `edits`: each object's settings and the outline
+/// width they give.
+fn store_commands(edits: Vec<(Shape, Slots, bool)>) -> Vec<Command> {
     let mut cmds = vec![];
     for (shape, slots, thread) in edits {
         if let Some(w) = sew::stroke_width_for(&slots, thread) {
@@ -340,9 +401,7 @@ fn store(app: &mut App, label: &'static str, edits: Vec<(Shape, Slots, bool)>) {
             data: sew::data_with(&shape, &slots),
         });
     }
-    if !cmds.is_empty() {
-        let _ = app.run_batch_keeping_lines(label, &cmds);
-    }
+    cmds
 }
 
 /// Set the stitch type of one part of the selection.
@@ -391,6 +450,8 @@ fn edit_settings(
     store(app, "Stitch Settings", edits);
 }
 
+/// Take the stitches off the selection: back to plain vectors that sew
+/// nothing.
 fn reset_selection(app: &mut App) {
     let edits = selected_objects(app)
         .into_iter()
@@ -411,9 +472,35 @@ fn set_stroke_first(app: &mut App, first: bool) {
     store(app, "Sewing Order of Fill and Outline", edits);
 }
 
+/// The satin a line converts to: as wide as its outline, or the fabric's
+/// satin width when the outline is thinner than a satin can be.
+fn line_satin(shape: &Shape, fabric: &tracedraw_emb_stitch::Fabric) -> Slots {
+    let mut s = fabric.settings(StitchType::Satin);
+    if let Some(w) = shape
+        .stroke
+        .as_ref()
+        .map(|st| st.width)
+        .filter(|w| w.is_finite() && *w >= MIN_SATIN_MM)
+    {
+        s.satin.width = w;
+    }
+    Slots {
+        fill: Slot::Set(StitchSettings::of(StitchType::None)),
+        stroke: Slot::Set(s),
+        stroke_first: false,
+    }
+}
+
+/// The narrowest outline a converted line keeps as its satin's width, mm.
+const MIN_SATIN_MM: f64 = 1.0;
+
 /// Convert each selected closed shape into Satin Blocks columns, sewn just
 /// after it; the shape stays, hidden.
-pub fn convert_to_satin(app: &mut App, method: medial::Method) {
+pub fn convert_to_satin(
+    app: &mut App,
+    fabric: &tracedraw_emb_stitch::Fabric,
+    method: medial::Method,
+) {
     let height = app.page_size().height;
     let Some(layer) = app.active_layer() else {
         return;
@@ -421,6 +508,7 @@ pub fn convert_to_satin(app: &mut App, method: medial::Method) {
     let mut cmds = vec![];
     let mut made = vec![];
     let mut hidden = vec![];
+    let mut lines = vec![];
     let mut widest: f64 = 0.0;
     let satin = sew::Slots {
         fill: Slot::Set(StitchSettings::of(StitchType::None)),
@@ -428,6 +516,12 @@ pub fn convert_to_satin(app: &mut App, method: medial::Method) {
         stroke_first: false,
     };
     for s in selected_objects(app) {
+        // A line (an outline without a fill) sews as a satin along itself.
+        if sew::fill_rgb(&s).is_none() && sew::stroke_rgb(&s).is_some() {
+            let slots = line_satin(&s, fabric);
+            lines.push((s, slots, false));
+            continue;
+        }
         let (paths, w) = sew::satin_columns(&s, height, method);
         if paths.is_empty() {
             continue;
@@ -465,14 +559,20 @@ pub fn convert_to_satin(app: &mut App, method: medial::Method) {
         }
         hidden.push(s.id);
     }
-    if made.is_empty() {
+    if made.is_empty() && lines.is_empty() {
         app.status = tr("modela_embroidery.convert_none");
         return;
     }
-    cmds.push(Command::SetVisible {
-        shapes: hidden,
-        visible: false,
-    });
+    if !lines.is_empty() {
+        made.extend(lines.iter().map(|(s, ..)| s.id));
+        cmds.extend(store_commands(lines));
+    }
+    if !hidden.is_empty() {
+        cmds.push(Command::SetVisible {
+            shapes: hidden,
+            visible: false,
+        });
+    }
     if app
         .run_batch_keeping_lines("Convert to Satin", &cmds)
         .is_ok()
@@ -824,7 +924,7 @@ fn apply_fix(app: &mut App, ds: &DesignSettings, fix: &check::Fix) {
         check::Fix::RemoveOverlaps(ids) => remove_overlaps(app, ds, ids),
         check::Fix::ConvertToSatin(id) => {
             app.select(vec![*id]);
-            convert_to_satin(app, medial::Method::Centerline);
+            convert_to_satin(app, ds.fabric, medial::Method::Centerline);
         }
         check::Fix::SplitSatin(id, part) => {
             app.select(vec![*id]);
@@ -834,6 +934,334 @@ fn apply_fix(app: &mut App, ds: &DesignSettings, fix: &check::Fix) {
         check::Fix::SewAsRun(id) => {
             app.select(vec![*id]);
             set_kind(app, ds.fabric, Part::Stroke, StitchType::Run);
+        }
+    }
+}
+
+// ----- sewing start and end ---------------------------------------------------
+
+/// Stitch space (mm, y down) to page space (mm, y up) on a page `height`
+/// tall.
+fn stitch_to_page(x: f64, y: f64, height: f64) -> Point {
+    Point::new(x, height - y)
+}
+
+/// The transform from `id`'s own space to the page, its groups' included.
+fn page_transform(app: &App, id: ShapeId) -> Option<Affine> {
+    sew::objects(app.doc(), app.page)
+        .into_iter()
+        .find(|o| o.shape.id == id)
+        .map(|o| o.shape.transform)
+}
+
+/// Where each selected object that sews starts and ends (page space):
+/// the first stitch of its first part and the last of its last.
+fn sewing_ends(app: &App, pv: &Preview) -> Vec<(ShapeId, Point, Point)> {
+    let selected: std::collections::HashSet<ShapeId> =
+        selected_objects(app).iter().map(|s| s.id).collect();
+    let height = app.page_size().height;
+    let mut out: Vec<(ShapeId, Point, Point)> = vec![];
+    for part in &pv.parts {
+        if !selected.contains(&part.id) {
+            continue;
+        }
+        let (Some(first), Some(last)) = (part.obj.stitches.first(), part.obj.stitches.last())
+        else {
+            continue;
+        };
+        let (a, b) = (
+            stitch_to_page(first.x, first.y, height),
+            stitch_to_page(last.x, last.y, height),
+        );
+        match out.iter_mut().find(|(id, ..)| *id == part.id) {
+            Some(e) => e.2 = b,
+            None => out.push((part.id, a, b)),
+        }
+    }
+    out
+}
+
+/// Each selected object that sews starts and ends where the shortest joins
+/// with the objects sewn before and after it put them, kept as its start
+/// and end (shown, and moved, with the Shape tool). One undo step.
+pub fn apply_nearest_join(app: &mut App, ctx: &egui::Context) {
+    let p = prefs(ctx);
+    let ds = design(&p);
+    let ids: std::collections::HashSet<ShapeId> =
+        selected_objects(app).iter().map(|s| s.id).collect();
+    let height = app.page_size().height;
+    // The design sewn as if the selection's own starts and ends were not
+    // placed: where the shortest joins take them.
+    let mut objects = sew::objects(app.doc(), app.page);
+    for o in objects.iter_mut().filter(|o| ids.contains(&o.shape.id)) {
+        o.shape.data = sew::data_with_pins(&o.shape, &sew::Pins::default());
+    }
+    let parts = sew::sew_parts(&objects, &ds, height);
+    let mut ends: Vec<(ShapeId, Point, Point)> = vec![];
+    for part in parts.iter().filter(|p| ids.contains(&p.id)) {
+        let (Some(first), Some(last)) = (part.obj.stitches.first(), part.obj.stitches.last())
+        else {
+            continue;
+        };
+        let (a, b) = (
+            stitch_to_page(first.x, first.y, height),
+            stitch_to_page(last.x, last.y, height),
+        );
+        match ends.iter_mut().find(|(id, ..)| *id == part.id) {
+            Some(e) => e.2 = b,
+            None => ends.push((part.id, a, b)),
+        }
+    }
+    let mut cmds = vec![];
+    for (id, a, b) in &ends {
+        let (Some(t), Some(shape)) = (
+            objects
+                .iter()
+                .find(|o| o.shape.id == *id)
+                .map(|o| o.shape.transform),
+            app.doc().find_shape(*id),
+        ) else {
+            continue;
+        };
+        let inv = t.inverse();
+        cmds.push(Command::SetObjectData {
+            shape: *id,
+            data: sew::data_with_pins(
+                shape,
+                &sew::Pins {
+                    start: Some(inv * *a),
+                    end: Some(inv * *b),
+                },
+            ),
+        });
+    }
+    if cmds.is_empty() {
+        app.status = tr("modela_embroidery.nearest_join_none");
+        return;
+    }
+    let n = cmds.len();
+    if app
+        .run_batch_keeping_lines("Apply Nearest Join", &cmds)
+        .is_ok()
+    {
+        app.status = trf(
+            "modela_embroidery.nearest_join_done",
+            &[("n", &n.to_string())],
+        );
+    }
+}
+
+/// The selection's starts and ends placed by hand taken off: the shortest
+/// joins choose them again. One undo step.
+pub fn clear_sewing_ends(app: &mut App) {
+    let cmds: Vec<Command> = selected_objects(app)
+        .iter()
+        .filter_map(|s| app.doc().find_shape(s.id))
+        .filter(|s| !sew::pins(s).is_empty())
+        .map(|s| Command::SetObjectData {
+            shape: s.id,
+            data: sew::data_with_pins(s, &sew::Pins::default()),
+        })
+        .collect();
+    if !cmds.is_empty() {
+        let _ = app.run_batch_keeping_lines("Clear Sewing Start and End", &cmds);
+    }
+}
+
+/// Whether any selected object has a start or end placed by hand.
+pub fn has_sewing_ends(app: &App) -> bool {
+    selected_objects(app)
+        .iter()
+        .filter_map(|s| app.doc().find_shape(s.id))
+        .any(|s| !sew::pins(s).is_empty())
+}
+
+/// Whether the canvas shows the sewing start and end handles: the Shape
+/// tool in the Embroidery workspace.
+fn shows_handles(app: &App) -> bool {
+    app.workspace == crate::app::Workspace::Embroidery && app.tool == crate::tools::Tool::Shape
+}
+
+/// A handle being dragged: the object, whether it is its end, and where
+/// the pointer is.
+#[derive(Clone, Copy, Debug)]
+struct HandleDrag {
+    id: ShapeId,
+    end: bool,
+    at: Pos2,
+}
+
+const HANDLE_DRAG_ID: &str = "modela_embroidery_handle_drag";
+/// How near a handle the pointer picks it, points.
+const HANDLE_REACH: f32 = 8.0;
+/// The start handle is a square this wide, the end's cross as wide, points.
+const HANDLE_SIZE: f32 = 9.0;
+const START_COLOR: Color32 = Color32::from_rgb(22, 163, 74);
+
+/// The Shape tool over the sewing start and end handles: a drag moves one
+/// (dropped on the object's outline); true while the pointer is busy with
+/// them, so the canvas does nothing else.
+pub fn handles_pointer(app: &mut App, response: &egui::Response) -> bool {
+    if !shows_handles(app) {
+        return false;
+    }
+    let ctx = response.ctx.clone();
+    let key = egui::Id::new(HANDLE_DRAG_ID);
+    if let Some(mut drag) = ctx.data(|d| d.get_temp::<HandleDrag>(key)) {
+        if let Some(p) = ctx.input(|i| i.pointer.latest_pos()) {
+            drag.at = p;
+        }
+        if ctx.input(|i| i.pointer.primary_down()) {
+            ctx.data_mut(|d| d.insert_temp(key, drag));
+        } else {
+            ctx.data_mut(|d| d.remove::<HandleDrag>(key));
+            place_handle(app, &drag);
+        }
+        ctx.set_cursor_icon(egui::CursorIcon::Grabbing);
+        return true;
+    }
+    let Some(pos) = response.hover_pos() else {
+        return false;
+    };
+    let pv = preview(app, &prefs(&ctx));
+    let view = app.view;
+    let hit = sewing_ends(app, &pv).into_iter().find_map(|(id, a, b)| {
+        if view.to_screen(b).distance(pos) <= HANDLE_REACH {
+            Some((id, true))
+        } else if view.to_screen(a).distance(pos) <= HANDLE_REACH {
+            Some((id, false))
+        } else {
+            None
+        }
+    });
+    let Some((id, end)) = hit else {
+        return false;
+    };
+    ctx.set_cursor_icon(egui::CursorIcon::Grab);
+    let tip = if end {
+        tr("modela_embroidery.end_handle_tip")
+    } else {
+        tr("modela_embroidery.start_handle_tip")
+    };
+    response.clone().on_hover_text_at_pointer(tip);
+    if ctx.input(|i| i.pointer.primary_pressed()) {
+        ctx.data_mut(|d| d.insert_temp(key, HandleDrag { id, end, at: pos }));
+        return true;
+    }
+    ctx.input(|i| i.pointer.primary_down())
+}
+
+/// The handle `drag` dropped: the object's start or end placed at its
+/// outline's point nearest the drop. One undo step.
+fn place_handle(app: &mut App, drag: &HandleDrag) {
+    let Some(t) = page_transform(app, drag.id) else {
+        return;
+    };
+    let Some(shape) = app.doc().find_shape(drag.id).cloned() else {
+        return;
+    };
+    let dropped = app.view.to_page(drag.at);
+    let mut page_shape = shape.clone();
+    page_shape.transform = t;
+    let Some(on) = nearest_on_outline(&page_shape, dropped) else {
+        return;
+    };
+    let local = t.inverse() * on;
+    let mut pins = sew::pins(&shape);
+    if drag.end {
+        pins.end = Some(local);
+    } else {
+        pins.start = Some(local);
+    }
+    let label = if drag.end {
+        "Move Sewing End"
+    } else {
+        "Move Sewing Start"
+    };
+    let _ = app.run_batch_keeping_lines(
+        label,
+        &[Command::SetObjectData {
+            shape: drag.id,
+            data: sew::data_with_pins(&shape, &pins),
+        }],
+    );
+}
+
+/// The point of `shape`'s outline (page space) nearest `p`.
+fn nearest_on_outline(shape: &Shape, p: Point) -> Option<Point> {
+    let mut best: Option<(f64, Point)> = None;
+    let mut prev: Option<Point> = None;
+    let mut start: Option<Point> = None;
+    let consider = |a: Point, b: Point, best: &mut Option<(f64, Point)>| {
+        let ab = b - a;
+        let len2 = ab.hypot2();
+        let t = if len2 > 1e-18 {
+            ((p - a).dot(ab) / len2).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
+        let q = a + ab * t;
+        let d = q.distance(p);
+        if best.is_none_or(|(bd, _)| d < bd) {
+            *best = Some((d, q));
+        }
+    };
+    kurbo::flatten(shape.page_path(), 0.05, |el| match el {
+        kurbo::PathEl::MoveTo(q) => {
+            prev = Some(q);
+            start = Some(q);
+            consider(q, q, &mut best);
+        }
+        kurbo::PathEl::LineTo(q) => {
+            if let Some(a) = prev {
+                consider(a, q, &mut best);
+            }
+            prev = Some(q);
+        }
+        kurbo::PathEl::ClosePath => {
+            if let (Some(a), Some(b)) = (prev, start) {
+                consider(a, b, &mut best);
+            }
+            prev = start;
+        }
+        _ => {}
+    });
+    best.map(|(_, q)| q)
+}
+
+/// The sewing start (a green square) and end (a red cross) of each
+/// selected object that sews, with the Shape tool; the one being dragged
+/// follows the pointer.
+fn draw_handles(app: &App, painter: &Painter, pv: &Preview) {
+    if !shows_handles(app) {
+        return;
+    }
+    let drag = painter
+        .ctx()
+        .data(|d| d.get_temp::<HandleDrag>(egui::Id::new(HANDLE_DRAG_ID)));
+    for (id, a, b) in sewing_ends(app, pv) {
+        let mut start = app.view.to_screen(a);
+        let mut end = app.view.to_screen(b);
+        if let Some(d) = drag.filter(|d| d.id == id) {
+            if d.end {
+                end = d.at;
+            } else {
+                start = d.at;
+            }
+        }
+        let h = HANDLE_SIZE / 2.0;
+        let square = egui::Rect::from_center_size(start, egui::Vec2::splat(HANDLE_SIZE));
+        painter.rect_filled(square, 1.0, START_COLOR);
+        painter.rect_stroke(
+            square,
+            1.0,
+            EStroke::new(1.0, Color32::WHITE),
+            egui::StrokeKind::Outside,
+        );
+        for (w, c) in [(4.0, Color32::WHITE), (2.2, ERROR)] {
+            let s = EStroke::new(w, c);
+            painter.line_segment([end + egui::vec2(-h, -h), end + egui::vec2(h, h)], s);
+            painter.line_segment([end + egui::vec2(-h, h), end + egui::vec2(h, -h)], s);
         }
     }
 }
@@ -986,7 +1414,7 @@ fn tool_buttons(app: &mut App, ui: &mut Ui, p: &Prefs) {
     )
     .clicked()
     {
-        convert_to_satin(app, medial::Method::Centerline);
+        convert_to_satin(app, design(p).fabric, medial::Method::Centerline);
     }
     if icons::labeled(
         ui,
@@ -1889,7 +2317,7 @@ pub fn panel(app: &mut App, ui: &mut Ui) {
                         )
                         .clicked()
                         {
-                            convert_to_satin(app, medial::Method::Centerline);
+                            convert_to_satin(app, ds.fabric, medial::Method::Centerline);
                         }
                     });
                 }
@@ -1958,7 +2386,11 @@ mod tests {
             fill: Fill::Solid(Color::rgb8(10, 120, 40)),
         });
         app.select(vec![id]);
-        convert_to_satin(&mut app, medial::Method::Centerline);
+        convert_to_satin(
+            &mut app,
+            DesignSettings::new("woven", "none").fabric,
+            medial::Method::Centerline,
+        );
         assert!(!app.doc().find_shape(id).unwrap().visible);
         let made = app.selection.clone();
         assert!(!made.is_empty());
@@ -2007,15 +2439,360 @@ mod tests {
     #[test]
     fn preview_is_cached_until_the_drawing_changes() {
         let mut app = App::headless();
-        square(&mut app);
+        let id = square(&mut app);
+        sew::convert(&mut app, id);
         let p = Prefs::default();
         let a = preview(&app, &p);
         let b = preview(&app, &p);
         assert!(Arc::ptr_eq(&a, &b));
-        square(&mut app);
+        let id = square(&mut app);
+        sew::convert(&mut app, id);
         let c = preview(&app, &p);
         assert!(!Arc::ptr_eq(&a, &c));
         assert!(c.design.stitch_count() > a.design.stitch_count());
+    }
+
+    #[test]
+    fn plain_vectors_sew_nothing_and_show_as_vectors_in_the_stitch_views() {
+        let mut app = App::headless();
+        app.set_workspace(crate::app::Workspace::Embroidery);
+        let ctx = egui::Context::default();
+        let plain = square(&mut app);
+        assert!(preview(&app, &prefs(&ctx)).parts.is_empty());
+        // Nothing sews: the drawing shows whole, on the fabric.
+        set_prefs(
+            &ctx,
+            Prefs {
+                view: view::STITCHES,
+                ..Prefs::default()
+            },
+        );
+        assert!(vector_doc(&app, &ctx).is_none());
+        assert_eq!(page_color(&app, &ctx), Some(view::fabric(false)));
+        let sewn = square(&mut app);
+        sew::convert(&mut app, sewn);
+        let doc = vector_doc(&app, &ctx).expect("a drawing without the sewn object");
+        assert!(!doc.find_shape(sewn).unwrap().visible);
+        assert!(doc.find_shape(plain).unwrap().visible);
+        // Made once per state of the drawing.
+        assert!(Rc::ptr_eq(&doc, &vector_doc(&app, &ctx).unwrap()));
+        // The vector view and other workspaces show the drawing as it is.
+        set_prefs(&ctx, Prefs::default());
+        assert!(vector_doc(&app, &ctx).is_none() && page_color(&app, &ctx).is_none());
+    }
+
+    #[test]
+    fn a_line_converts_to_a_satin_along_itself() {
+        let mut app = App::headless();
+        let mut path = tracedraw_core::geometry::BezPath::new();
+        path.move_to((20.0, 20.0));
+        path.line_to((90.0, 40.0));
+        let id = app
+            .new_shape(ShapeKind::Path {
+                path,
+                closed: false,
+            })
+            .unwrap();
+        app.run(Command::SetFill {
+            shapes: vec![id],
+            fill: Fill::None,
+        });
+        app.run(Command::SetStroke {
+            shapes: vec![id],
+            stroke: Some(Stroke::hairline(Color::rgb8(0, 0, 200))),
+        });
+        let ds = DesignSettings::new("woven", "none");
+        assert!(sew::sewn(app.doc().find_shape(id).unwrap(), ds.fabric).is_empty());
+        app.select(vec![id]);
+        convert_to_satin(&mut app, ds.fabric, medial::Method::Centerline);
+        let s = app.doc().find_shape(id).unwrap();
+        assert!(s.visible, "the line stays and sews itself");
+        let parts = sew::sewn(s, ds.fabric);
+        assert_eq!(parts.len(), 1);
+        assert_eq!(parts[0].1.kind, StitchType::Satin);
+        // A hairline takes the fabric's satin width, and shows it.
+        let w = ds.fabric.settings(StitchType::Satin).satin.width;
+        assert!((parts[0].1.satin.width - w).abs() < 1e-9);
+        assert!((s.stroke.as_ref().unwrap().width - w).abs() < 1e-9);
+        assert_eq!(app.selection, vec![id]);
+    }
+
+    /// The page point where the stitches of `id` start and end.
+    fn ends_of(app: &App, id: ShapeId) -> (Point, Point) {
+        let pv = preview(app, &Prefs::default());
+        let h = app.page_size().height;
+        let parts: Vec<_> = pv.parts.iter().filter(|p| p.id == id).collect();
+        let first = parts.first().and_then(|p| p.obj.stitches.first()).unwrap();
+        let last = parts.last().and_then(|p| p.obj.stitches.last()).unwrap();
+        (
+            stitch_to_page(first.x, first.y, h),
+            stitch_to_page(last.x, last.y, h),
+        )
+    }
+
+    #[test]
+    fn an_object_ends_near_where_the_next_one_begins() {
+        let mut app = App::headless();
+        let a = rect(&mut app, Rect::new(20.0, 20.0, 50.0, 50.0), [200, 0, 0]);
+        let b = rect(&mut app, Rect::new(80.0, 20.0, 110.0, 50.0), [0, 0, 200]);
+        let (_, a_end) = ends_of(&app, a);
+        let (b_start, _) = ends_of(&app, b);
+        // The first square ends on its side facing the second, which
+        // starts on its side facing the first.
+        assert!(a_end.x > 44.0, "{a_end:?}");
+        assert!(b_start.x < 86.0, "{b_start:?}");
+    }
+
+    #[test]
+    fn a_start_and_end_placed_by_hand_are_kept_and_cleared() {
+        let mut app = App::headless();
+        let id = rect(&mut app, Rect::new(20.0, 20.0, 60.0, 60.0), [200, 0, 0]);
+        // Placed in the object's own space: a rectangle's is the page's.
+        let shape = app.doc().find_shape(id).unwrap().clone();
+        let pins = sew::Pins {
+            start: Some(Point::new(40.0, 40.0)),
+            end: Some(Point::new(55.0, 25.0)),
+        };
+        app.run(Command::SetObjectData {
+            shape: id,
+            data: sew::data_with_pins(&shape, &pins),
+        });
+        let (start, end) = ends_of(&app, id);
+        assert!(start.distance(Point::new(40.0, 40.0)) < 1e-6, "{start:?}");
+        assert!(end.distance(Point::new(55.0, 25.0)) < 1e-6, "{end:?}");
+        app.select(vec![id]);
+        assert!(has_sewing_ends(&app));
+        clear_sewing_ends(&mut app);
+        assert!(!has_sewing_ends(&app));
+        assert!(sew::pins(app.doc().find_shape(id).unwrap()).is_empty());
+    }
+
+    #[test]
+    fn nearest_join_keeps_the_joins_as_starts_and_ends_in_one_step() {
+        let mut app = App::headless();
+        let ctx = egui::Context::default();
+        let a = rect(&mut app, Rect::new(20.0, 20.0, 50.0, 50.0), [200, 0, 0]);
+        let b = rect(&mut app, Rect::new(80.0, 20.0, 110.0, 50.0), [0, 0, 200]);
+        let before = (ends_of(&app, a), ends_of(&app, b));
+        app.select(vec![a, b]);
+        apply_nearest_join(&mut app, &ctx);
+        for id in [a, b] {
+            let p = sew::pins(app.doc().find_shape(id).unwrap());
+            assert!(p.start.is_some() && p.end.is_some(), "{id:?}");
+        }
+        // Kept where the shortest joins had them: the stitches start and
+        // end at the same places.
+        let after = (ends_of(&app, a), ends_of(&app, b));
+        for (x, y) in [
+            (before.0 .0, after.0 .0),
+            (before.0 .1, after.0 .1),
+            (before.1 .0, after.1 .0),
+            (before.1 .1, after.1 .1),
+        ] {
+            assert!(x.distance(y) < 0.6, "{x:?} {y:?}");
+        }
+        app.undo();
+        assert!(sew::pins(app.doc().find_shape(a).unwrap()).is_empty());
+        // Nothing converted selected: it says so.
+        let plain = square(&mut app);
+        app.select(vec![plain]);
+        apply_nearest_join(&mut app, &ctx);
+        assert_eq!(app.status, tr("modela_embroidery.nearest_join_none"));
+    }
+
+    #[test]
+    fn a_dropped_handle_lands_on_the_outline() {
+        let mut app = App::headless();
+        let id = rect(&mut app, Rect::new(20.0, 20.0, 60.0, 60.0), [200, 0, 0]);
+        // Dropped just outside the right side.
+        let at = app.view.to_screen(Point::new(63.0, 40.0));
+        place_handle(&mut app, &HandleDrag { id, end: true, at });
+        let end = sew::pins(app.doc().find_shape(id).unwrap()).end.unwrap();
+        assert!(
+            (end.x - 60.0).abs() < 1e-3 && (end.y - 40.0).abs() < 0.1,
+            "{end:?}"
+        );
+        let got = ends_of(&app, id).1;
+        assert!(got.distance(end) < 1e-6, "{got:?} {end:?}");
+    }
+
+    /// A closed path through `pts`, filled, outlined and converted.
+    fn blob(app: &mut App, pts: &[(f64, f64)], c: [u8; 3], outline: bool) -> ShapeId {
+        let mut path = tracedraw_core::geometry::BezPath::new();
+        for (i, p) in pts.iter().enumerate() {
+            if i == 0 {
+                path.move_to(*p);
+            } else {
+                path.line_to(*p);
+            }
+        }
+        path.close_path();
+        let id = app
+            .new_shape(ShapeKind::Path { path, closed: true })
+            .unwrap();
+        app.run(Command::SetFill {
+            shapes: vec![id],
+            fill: Fill::Solid(Color::rgb8(c[0], c[1], c[2])),
+        });
+        app.run(Command::SetStroke {
+            shapes: vec![id],
+            stroke: outline.then(|| Stroke::hairline(Color::BLACK)),
+        });
+        sew::convert(app, id);
+        id
+    }
+
+    /// Every sewn stitch of the page lies inside a sewn object's area or
+    /// on its outline: no thread runs across the empty fabric.
+    #[test]
+    fn no_sewn_stitch_crosses_the_empty_fabric() {
+        let mut app = App::headless();
+        // A tree: a trunk under a wide crown, one shape; a star; a C; and
+        // a square far off.
+        let tree = [
+            (60.0, 20.0),
+            (66.0, 20.0),
+            (66.0, 40.0),
+            (90.0, 40.0),
+            (63.0, 90.0),
+            (36.0, 40.0),
+            (60.0, 40.0),
+        ];
+        let star: Vec<(f64, f64)> = (0..10)
+            .map(|i| {
+                let a = std::f64::consts::PI * i as f64 / 5.0;
+                let r = if i % 2 == 0 { 30.0 } else { 11.0 };
+                (150.0 + r * a.cos(), 60.0 + r * a.sin())
+            })
+            .collect();
+        let c: Vec<(f64, f64)> = (0..=30)
+            .map(|i| {
+                let a = 0.6 + (std::f64::consts::TAU - 1.2) * i as f64 / 30.0;
+                (60.0 + 25.0 * a.cos(), 150.0 + 25.0 * a.sin())
+            })
+            .chain((0..=30).rev().map(|i| {
+                let a = 0.6 + (std::f64::consts::TAU - 1.2) * i as f64 / 30.0;
+                (60.0 + 14.0 * a.cos(), 150.0 + 14.0 * a.sin())
+            }))
+            .collect();
+        blob(&mut app, &tree, [0, 120, 0], true);
+        blob(&mut app, &star, [200, 0, 0], false);
+        blob(&mut app, &c, [0, 0, 200], true);
+        blob(
+            &mut app,
+            &[
+                (150.0, 140.0),
+                (170.0, 140.0),
+                (170.0, 160.0),
+                (150.0, 160.0),
+            ],
+            [0, 0, 200],
+            false,
+        );
+        let pv = preview(&app, &Prefs::default());
+        let areas: Vec<Vec<tracedraw_emb_stitch::Polyline>> = sew::objects(app.doc(), app.page)
+            .iter()
+            .map(|o| sew::polylines(&o.shape, app.page_size().height))
+            .collect();
+        let h = app.page_size().height;
+        let ok = |p: Point| {
+            // In stitch space, as the areas are.
+            let q = tracedraw_emb_stitch::Point::new(p.x, h - p.y);
+            areas.iter().any(|r| {
+                tracedraw_emb_stitch::travel::contains(r, q)
+                    || tracedraw_emb_stitch::travel::near_edge(r, q, 0.8)
+            })
+        };
+        let mut bad = vec![];
+        for w in pv.stitches.windows(2) {
+            if let [a, b] = w {
+                if !(a.sew && b.sew) || b.trim {
+                    continue;
+                }
+                let n = ((a.p.distance(b.p) / 0.5).ceil() as usize).max(1);
+                if (0..=n).any(|k| !ok(a.p.lerp(b.p, k as f64 / n as f64))) {
+                    bad.push((a.p, b.p, b.underlay));
+                }
+            }
+        }
+        assert!(
+            bad.is_empty(),
+            "{} stitches cross the fabric: {:?}",
+            bad.len(),
+            &bad[..bad.len().min(8)]
+        );
+    }
+
+    /// Shapes converted to satin columns sew inside where the shapes were.
+    #[test]
+    fn satin_columns_sew_inside_the_converted_shapes() {
+        let mut app = App::headless();
+        let tree = [
+            (60.0, 20.0),
+            (66.0, 20.0),
+            (66.0, 40.0),
+            (90.0, 40.0),
+            (63.0, 90.0),
+            (36.0, 40.0),
+            (60.0, 40.0),
+        ];
+        let star: Vec<(f64, f64)> = (0..10)
+            .map(|i| {
+                let a = std::f64::consts::PI * i as f64 / 5.0;
+                let r = if i % 2 == 0 { 30.0 } else { 11.0 };
+                (150.0 + r * a.cos(), 60.0 + r * a.sin())
+            })
+            .collect();
+        let mut originals = vec![];
+        for (pts, c) in [(&tree[..], [0, 120, 0]), (&star[..], [200, 0, 0])] {
+            let id = blob(&mut app, pts, c, false);
+            app.select(vec![id]);
+            convert_to_satin(
+                &mut app,
+                DesignSettings::new("woven", "none").fabric,
+                medial::Method::Centerline,
+            );
+            originals.push(app.doc().find_shape(id).unwrap().clone());
+        }
+        let h = app.page_size().height;
+        let areas: Vec<Vec<tracedraw_emb_stitch::Polyline>> =
+            originals.iter().map(|s| sew::polylines(s, h)).collect();
+        let pv = preview(&app, &Prefs::default());
+        assert!(pv.stitches.len() > 200);
+        // Each column covers the area between its rails, so travel sewn
+        // before it can hide under it.
+        let columns: Vec<_> = pv
+            .parts
+            .iter()
+            .filter(|p| p.kind == StitchType::SatinBlocks)
+            .collect();
+        assert!(columns.len() > 1);
+        assert!(columns.iter().all(|p| !p.obj.cover.is_empty()));
+        let ok = |p: Point| {
+            let q = tracedraw_emb_stitch::Point::new(p.x, h - p.y);
+            areas.iter().any(|r| {
+                tracedraw_emb_stitch::travel::contains(r, q)
+                    || tracedraw_emb_stitch::travel::near_edge(r, q, 0.8)
+            })
+        };
+        let mut bad = vec![];
+        for w in pv.stitches.windows(2) {
+            if let [a, b] = w {
+                if !(a.sew && b.sew) || b.trim {
+                    continue;
+                }
+                let n = ((a.p.distance(b.p) / 0.5).ceil() as usize).max(1);
+                if (0..=n).any(|k| !ok(a.p.lerp(b.p, k as f64 / n as f64))) {
+                    bad.push((a.p, b.p, b.underlay));
+                }
+            }
+        }
+        assert!(
+            bad.is_empty(),
+            "{} stitches cross the fabric: {:?}",
+            bad.len(),
+            &bad[..bad.len().min(8)]
+        );
     }
 
     fn rect(app: &mut App, r: Rect, c: [u8; 3]) -> ShapeId {
@@ -2034,6 +2811,8 @@ mod tests {
             shapes: vec![id],
             stroke: None,
         });
+        // Converted, so that it sews.
+        sew::convert(app, id);
         id
     }
 

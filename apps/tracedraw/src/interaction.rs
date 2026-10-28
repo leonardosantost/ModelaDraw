@@ -3563,6 +3563,15 @@ impl App {
                 }
             }
         }
+        // Embroidery: J keeps the shortest joins as the selection's sewing
+        // starts and ends.
+        if self.workspace == crate::app::Workspace::Embroidery
+            && !self.selection.is_empty()
+            && pressed(Key::J, Modifiers::NONE)
+        {
+            crate::modela_embroidery::apply_nearest_join(self, ctx);
+            return;
+        }
         // Tool shortcuts: user overrides from Options, then the defaults.
         for group in crate::tools::GROUPS {
             for t in group.tools {

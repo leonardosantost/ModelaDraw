@@ -20,6 +20,7 @@
 //! - [`fill`]: tatami fill with angle, row spacing, staggered penetrations and underlay.
 //! - [`lettering`]: text as satin columns in the built-in centre-line font, Modela Sans.
 //! - [`route`]: automatic start points, so each object starts near where the needle is.
+//! - [`travel`]: moves inside a fill that stay inside it instead of jumping.
 //! - [`fabric`]: fabric presets (density, pull compensation and underlay for each fabric).
 //!
 //! Algorithms follow published digitizing practice; `ATTRIBUTION.md` lists the sources. No GPL
@@ -40,12 +41,13 @@ pub mod route;
 pub mod run;
 pub mod satin;
 pub mod settings;
+pub mod travel;
 
 pub use fabric::{FABRICS, Fabric};
 pub use geometry::{Polyline, polylines_from_bezpath};
 pub use kurbo::Point;
 pub use lettering::Lettering;
-pub use route::generate_from;
+pub use route::{Ends, generate_from, generate_routed};
 pub use settings::{EStitchSettings, FillSettings, GuidedSettings, RopeSettings, RunSettings, SatinSettings, StitchSettings, StitchType, Underlay};
 
 use serde::{Deserialize, Serialize};

@@ -15,9 +15,17 @@ plan and the machine formats are the `tracedraw-emb-stitch`,
 
 ## What sews
 
-Every visible object on the current page sews in paint order, bottom to
-top; groups are opened and their objects sew in turn. Bitmaps, tables,
-symbol instances and clip frames do not sew. Each object has two parts:
+Nothing sews until it is converted: an object becomes embroidery when
+Convert to Satin is used on it, a stitch type is chosen for one of its
+parts in the Embroidery panel, or it is lettering. Every other object stays
+a vector: it sews nothing, costs no stitch work (a drawing with many
+vectors stays quick) and shows as a vector in every view. Remove Stitches
+(in the Stitches section) makes a converted object a plain vector again.
+
+The converted visible objects of the current page sew in paint order,
+bottom to top; groups are opened and their objects sew in turn. Bitmaps,
+tables, symbol instances and clip frames do not sew. Each object has two
+parts:
 
 - the fill sews first with a fill stitch (Tatami, Contour, Circular,
   Gradient, Motif or Guided fill) in the fill colour;
@@ -25,8 +33,8 @@ symbol instances and clip frames do not sew. Each object has two parts:
   Satin, Satin Blocks, Manual, E-Stitch or Rope) in the outline colour.
 
 "Sew the outline first" turns the order round. A part with no settings of
-its own follows the automatic rule: Tatami where the object has a fill, a
-single run where it has an outline. A fountain, pattern or texture fill
+its own does not sew; the panel shows it with the fabric's defaults (Tatami
+for a fill, a single run for an outline) until a type is chosen. A fountain, pattern or texture fill
 sews in black. Satin Blocks and Manual are the whole object: the fill part
 does not sew. A satin, E-stitch or rope outline is as wide as the outline,
 and setting its width sets the outline width; choosing a running stitch
@@ -62,7 +70,7 @@ warns past 2.6 layers of thread in a 2 mm cell.
 ## Fabric and thread chart
 
 The fabric (woven, knit, piqué, terry, fleece, denim, twill, leather) sets
-the density, pull compensation and underlay of automatic parts. With a
+the density, pull compensation and underlay of the stitches chosen for it. With a
 thread chart (Brother or Janome), threads whose colour is in the chart are
 named in machine files, and Match to Thread Chart moves the selection's
 colours (or every object's) to the nearest chart thread (CIE Lab
@@ -79,8 +87,10 @@ Each icon's tip names it. The Embroidery, Sewing Sequence and Hoop tabs
 and the File menu's machine file rows have icons too.
 
 In both stitch
-views the canvas becomes fabric; Stitches draws every stitch as a line in
-its thread colour (the underlay fainter, jumps thin grey lines), Realistic
+views the page becomes fabric and the converted objects show as their
+stitches only; the objects not converted show as the vectors they are,
+under the stitches. Stitches draws every stitch as a line in
+its thread colour (the underlay fainter; a jump with the thread cut first dashed grey, as it leaves no thread; one without a cut, which leaves the thread lying across the fabric, solid amber), Realistic
 draws each as lit thread: a shadow down and right, the thread body and a
 sheen down its middle, so white and black thread keep their shape.
 
@@ -97,7 +107,9 @@ each frame.
 - Convert to Satin: each selected closed shape becomes Satin Blocks
   columns along its centre line (the exact medial axis on the desktop, a
   thinned skeleton in the browser), placed just above it in its colour; the
-  shape is hidden, not removed. Over 10 mm wide, the status bar warns.
+  shape is hidden, not removed. Over 10 mm wide, the status bar warns. A
+  line (an outline without a fill) sews as a satin along itself, as wide as
+  its outline, or the fabric's satin width when the outline is under 1 mm.
 - Sort by Color: each layer's objects reordered so each thread colour sews
   in one go, colours in the order they first sew.
 - Sewing Sequence panel: every sewn part in order, in colour blocks, with
@@ -118,6 +130,42 @@ taken from the chosen file's extension (the last one used is offered first
 and remembered). File > Open Machine File reads those and Barudan DSB, ZSK DSZ and Husqvarna Viking HUS onto the
 current page, centred: each run of stitches is a manual-stitch path in its
 thread colour, grouped.
+
+## Joins, and where each object starts and ends
+
+Each object starts near where the needle stopped and ends as near the next
+object as it can: of the ways of sewing it with the same penetrations (a
+tatami from either side, any object forwards or backwards) the one with the
+shortest joins on both sides is taken. The next object's start is the one
+placed on it by hand, or its point nearest this object. A closed outline
+sews on along itself to its point nearest the next object.
+
+Inside a fill, every move between its parts (a shape that splits into
+parts, like a tree's trunk and crown) and from the underlay into the top
+runs inside the shape as short travel stitches: straight where that stays
+inside (or within 0.6 mm of the edge), else along the shape's own edge the
+shorter way round. Only separate parts, or a way round more than six times
+the straight distance plus 20 mm, keep a jump. After its first part, a fill
+goes on with the part nearest the needle that leaves no unsewn row behind
+it.
+
+Between objects (and between separate parts of one), the move runs as
+travel stitches under objects sewn later: straight when the whole line is
+covered, else round inside one later object that both ends touch (within
+0.6 mm). Fills and satin columns (the area between their rails) cover; a
+move that no later object hides is a jump, with the thread cut first when
+it is longer than 3 mm.
+
+Apply Nearest Join (J, or the right-click menu with objects selected, in
+the Embroidery workspace) keeps the starts and ends the shortest joins give
+as the selected objects' own, in one undo step; Clear Sewing Start and End
+takes them off again. With the Shape tool, each selected object that sews
+shows its start as a green square and its end as a red cross; dragging one
+drops it on the object's outline. A start inside a fill is reached by travel
+inside it, sewn before its stitches cover it; an end, by travel over the
+fill in its colour when the way stays inside. They are stored in the
+object's data under `modela.embroidery.ends` (`{start?, end?}`, the
+object's own space), so they move with it.
 
 ## Lettering
 

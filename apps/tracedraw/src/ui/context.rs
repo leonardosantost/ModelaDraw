@@ -147,6 +147,7 @@ pub(crate) fn object_menu(app: &mut App, ui: &mut Ui, close: &mut bool) {
         .iter()
         .any(|s| matches!(s.kind, ShapeKind::Bitmap { .. }));
     let many = shapes.len() > 1;
+    embroidery_rows(app, ui, close);
     if is_text {
         if ci(ui, close, "menu.text.edit_text", "Ctrl+Shift+T", true) {
             app.open_edit_text_dialog();
@@ -483,8 +484,30 @@ pub(crate) fn object_menu(app: &mut App, ui: &mut Ui, close: &mut bool) {
     }
 }
 
+/// The Embroidery workspace's rows for the selection: the shortest joins
+/// kept as the objects' sewing starts and ends, and those taken off again.
+fn embroidery_rows(app: &mut App, ui: &mut Ui, close: &mut bool) {
+    if app.workspace != crate::app::Workspace::Embroidery || app.selection.is_empty() {
+        return;
+    }
+    if ci(ui, close, "modela_embroidery.nearest_join", "J", true) {
+        crate::modela_embroidery::apply_nearest_join(app, &ui.ctx().clone());
+    }
+    if ci(
+        ui,
+        close,
+        "modela_embroidery.clear_ends",
+        "",
+        crate::modela_embroidery::has_sewing_ends(app),
+    ) {
+        crate::modela_embroidery::clear_sewing_ends(app);
+    }
+    sep(ui);
+}
+
 fn node_menu(app: &mut App, ui: &mut Ui, close: &mut bool) {
     use tracedraw_core::nodes::NodeType;
+    embroidery_rows(app, ui, close);
     let has_nodes = !app.node_selection.is_empty();
     if ci(ui, close, "context.node_add", "", has_nodes) {
         app.add_node_midpoints();

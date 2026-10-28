@@ -1,11 +1,14 @@
 //! The embroidery model: which objects sew, each object's two stitch parts,
 //! the stitch plan and the machine file.
 //!
-//! Every visible object on a page sews in paint order (bottom to top).
-//! Each object has two parts: its fill sews with a fill stitch in the fill
-//! colour, then its outline with a line stitch in the outline colour. A part
-//! has stitch settings of its own or follows the automatic rule (tatami where
-//! there is a fill, a running stitch where there is an outline).
+//! An object sews only once it has been converted to embroidery (Convert to
+//! Satin, a stitch type chosen in the Embroidery panel, lettering); the
+//! others stay vectors and sew nothing. Converted objects sew in paint order
+//! (bottom to top). Each has two parts: its fill sews with a fill stitch in
+//! the fill colour, then its outline with a line stitch in the outline
+//! colour. A part has stitch settings of its own, or none and does not sew;
+//! a part without settings shows the fabric's defaults (tatami for a fill,
+//! a running stitch for an outline) in the panel until a type is chosen.
 //!
 //! The settings are kept in the object's data under [`STITCH_KEY`] as JSON:
 //! `{fill?, stroke?, strokeFirst?}`, each a `StitchSettings`. A value that is
@@ -23,12 +26,71 @@ use tracedraw_core::{Color, Document, Fill, PageId, Shape, ShapeId, ShapeKind};
 use tracedraw_emb_formats::{Command as Machine, Design, Format, Thread};
 use tracedraw_emb_plan::{plan_kinds, review, PlanObject, PlanSettings};
 use tracedraw_emb_stitch::{
-    generate_from, medial, polylines_from_bezpath, Fabric, Point as SPoint, Polyline,
+    generate_routed, medial, polylines_from_bezpath, Ends, Fabric, Point as SPoint, Polyline,
     Shape as StitchShape, StitchKind, StitchSettings, StitchType,
 };
 
 /// The object data key holding an object's stitch settings.
 pub const STITCH_KEY: &str = "modela.embroidery.stitch";
+/// The object data key holding where an object starts and ends sewing, when
+/// placed by hand: `{start?: [x, y], end?: [x, y]}` in the object's own
+/// space (mm, y up, before its transform).
+pub const ENDS_KEY: &str = "modela.embroidery.ends";
+
+/// Where an object starts and ends sewing, placed by hand (the object's own
+/// space); `None` where the plan chooses.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Pins {
+    pub start: Option<Point>,
+    pub end: Option<Point>,
+}
+
+impl Pins {
+    pub fn is_empty(&self) -> bool {
+        self.start.is_none() && self.end.is_none()
+    }
+}
+
+/// The start and end `shape` sews from and to, placed by hand.
+pub fn pins(shape: &Shape) -> Pins {
+    let Some(v) = shape
+        .data
+        .iter()
+        .find(|(k, _)| k == ENDS_KEY)
+        .and_then(|(_, v)| serde_json::from_str::<Value>(v).ok())
+    else {
+        return Pins::default();
+    };
+    let point = |k: &str| {
+        let a = v.get(k)?.as_array()?;
+        let (x, y) = (a.first()?.as_f64()?, a.get(1)?.as_f64()?);
+        (x.is_finite() && y.is_finite()).then(|| Point::new(x, y))
+    };
+    Pins {
+        start: point("start"),
+        end: point("end"),
+    }
+}
+
+/// `shape`'s object data with `pins` stored (or removed when empty).
+pub fn data_with_pins(shape: &Shape, pins: &Pins) -> Vec<(String, String)> {
+    let mut data: Vec<(String, String)> = shape
+        .data
+        .iter()
+        .filter(|(k, _)| k != ENDS_KEY)
+        .cloned()
+        .collect();
+    if !pins.is_empty() {
+        let mut o = serde_json::Map::new();
+        for (k, p) in [("start", pins.start), ("end", pins.end)] {
+            if let Some(p) = p {
+                o.insert(k.into(), serde_json::json!([p.x, p.y]));
+            }
+        }
+        data.push((ENDS_KEY.to_string(), Value::Object(o).to_string()));
+    }
+    data
+}
 /// Thread thickness, mm: the outline width a running stitch shows at.
 pub const THREAD_MM: f64 = 0.4;
 /// How closely curves are followed when flattened for stitching, mm.
@@ -273,8 +335,9 @@ pub fn part_settings(shape: &Shape, fabric: &Fabric, part: Part) -> (StitchSetti
 }
 
 /// The parts of `shape` that sew, in sewing order, with their settings and
-/// whether they are automatic. An automatic part sews only where the object
-/// has that paint; a part set without its paint sews in the other colour.
+/// whether they are automatic (never, now: a part without settings of its
+/// own does not sew). A part set without its paint sews in the other
+/// colour.
 pub fn sewn(shape: &Shape, fabric: &Fabric) -> Vec<(Part, StitchSettings, bool)> {
     let slots = slots(shape);
     let has = |part: Part| match part {
@@ -282,7 +345,7 @@ pub fn sewn(shape: &Shape, fabric: &Fabric) -> Vec<(Part, StitchSettings, bool)>
         Part::Stroke => stroke_rgb(shape).is_some(),
     };
     let wanted = |part: Part| match slots.get(part) {
-        Slot::Auto => has(part),
+        Slot::Auto => false,
         Slot::Set(s) => s.kind != StitchType::None,
     };
     let stroke = wanted(Part::Stroke);
@@ -450,13 +513,14 @@ pub struct Sewn {
     pub obj: PlanObject,
 }
 
-/// One part of `shape`, sewn, started as near `from` as the part allows.
+/// One part of `shape`, sewn, started and ended where `ends` asks as
+/// nearly as the part allows.
 fn stitch_part(
     shape: &Shape,
     ds: &DesignSettings,
     part: Part,
     s: &StitchSettings,
-    from: Option<SPoint>,
+    ends: &Ends,
     height: f64,
 ) -> PlanObject {
     let thread = thread_of(shape, part, ds.chart.as_ref());
@@ -473,15 +537,25 @@ fn stitch_part(
         k if k.is_fill() => Some(StitchShape::Area(polylines(shape, height))),
         _ => Some(StitchShape::Paths(polylines(shape, height))),
     };
-    // A fill hides travel sewn before it.
+    // A fill, or a satin column between its rails, hides travel sewn before
+    // it.
     let cover = match (&stitch_shape, s.kind.is_fill()) {
         (Some(StitchShape::Area(rings)), true) => rings.clone(),
+        (Some(StitchShape::Rails { left, right }), _) if left.len() >= 2 && right.len() >= 2 => {
+            let mut ring = left.clone();
+            ring.extend(right.iter().rev().copied());
+            vec![Polyline::new(ring, true)]
+        }
         _ => vec![],
     };
     // Lettering keeps the stroke order its font gives.
-    let from = from.filter(|_| s.lettering.is_none());
+    let ends = if s.lettering.is_some() {
+        Ends::default()
+    } else {
+        *ends
+    };
     let stitches = stitch_shape
-        .map(|sh| generate_from(&sh, s, from))
+        .map(|sh| generate_routed(&sh, s, &ends))
         .unwrap_or_default();
     PlanObject {
         stitches,
@@ -490,27 +564,111 @@ fn stitch_part(
     }
 }
 
-/// Each part of `objects` stitched, in sewing order; each part starts near
-/// where the last one ended.
+/// Each part of `objects` stitched, in sewing order. Each part starts near
+/// where the last one ended and ends near where the next object comes
+/// nearest it (the shortest join), or at the start and end placed by hand:
+/// an object's start applies to its first part, its end to its last.
 pub fn sew_parts(objects: &[Object], ds: &DesignSettings, height: f64) -> Vec<Sewn> {
-    let mut out = Vec::with_capacity(objects.len());
-    let mut at: Option<SPoint> = None;
-    for o in objects {
+    // Every part to sew, in order, with its object.
+    let mut queue: Vec<(usize, Part, StitchSettings, bool)> = vec![];
+    for (i, o) in objects.iter().enumerate() {
         for (part, settings, auto) in sewn(&o.shape, ds.fabric) {
-            let obj = stitch_part(&o.shape, ds, part, &settings, at, height);
-            if let Some(last) = obj.stitches.last() {
-                at = Some(last.point());
-            }
-            out.push(Sewn {
-                id: o.shape.id,
-                part,
-                kind: settings.kind,
-                auto,
-                obj,
-            });
+            queue.push((i, part, settings, auto));
         }
     }
+    let to_stitch = to_stitch(height);
+    let pinned: Vec<(Option<SPoint>, Option<SPoint>)> = objects
+        .iter()
+        .map(|o| {
+            let p = pins(&o.shape);
+            let at = |q: Option<Point>| {
+                q.map(|q| {
+                    let q = to_stitch * o.shape.transform * q;
+                    SPoint::new(q.x, q.y)
+                })
+            };
+            (at(p.start), at(p.end))
+        })
+        .collect();
+    // The outline of each object to sew, sampled, for the shortest joins.
+    let mut outlines: Vec<Option<Vec<SPoint>>> = vec![None; objects.len()];
+    let mut outline = |i: usize| -> Vec<SPoint> {
+        if let Some(Some(v)) = outlines.get(i) {
+            return v.clone();
+        }
+        let v = objects
+            .get(i)
+            .map(|o| sampled(&polylines(&o.shape, height)))
+            .unwrap_or_default();
+        if let Some(slot) = outlines.get_mut(i) {
+            *slot = Some(v.clone());
+        }
+        v
+    };
+    let mut out = Vec::with_capacity(queue.len());
+    let mut at: Option<SPoint> = None;
+    for (k, (i, part, settings, auto)) in queue.iter().enumerate() {
+        let Some(o) = objects.get(*i) else { continue };
+        let first_part = k == 0 || queue.get(k - 1).is_none_or(|p| p.0 != *i);
+        let next = queue.get(k + 1);
+        let last_part = next.is_none_or(|p| p.0 != *i);
+        let (start, end) = pinned.get(*i).copied().unwrap_or_default();
+        // Where the next object starts: its own start when placed by hand,
+        // else its point nearest this object.
+        let toward = match next {
+            Some((j, ..)) if *j != *i => pinned
+                .get(*j)
+                .and_then(|p| p.0)
+                .or_else(|| nearest_to(&outline(*j), &outline(*i))),
+            _ => None,
+        };
+        let ends = Ends {
+            from: at,
+            toward,
+            start: start.filter(|_| first_part),
+            end: end.filter(|_| last_part),
+        };
+        let obj = stitch_part(&o.shape, ds, *part, settings, &ends, height);
+        if let Some(last) = obj.stitches.last() {
+            at = Some(last.point());
+        }
+        out.push(Sewn {
+            id: o.shape.id,
+            part: *part,
+            kind: settings.kind,
+            auto: *auto,
+            obj,
+        });
+    }
     out
+}
+
+/// At most this many points of an outline are compared for the shortest
+/// join.
+const JOIN_SAMPLES: usize = 160;
+
+/// Up to [`JOIN_SAMPLES`] points spread along `lines`.
+fn sampled(lines: &[Polyline]) -> Vec<SPoint> {
+    let all: Vec<SPoint> = lines
+        .iter()
+        .flat_map(|l| l.points.iter().copied())
+        .collect();
+    let step = all.len().div_ceil(JOIN_SAMPLES).max(1);
+    all.into_iter().step_by(step).collect()
+}
+
+/// The point of `of` nearest any point of `to`.
+fn nearest_to(of: &[SPoint], to: &[SPoint]) -> Option<SPoint> {
+    let mut best: Option<(f64, SPoint)> = None;
+    for p in of {
+        for q in to {
+            let d = p.distance(*q);
+            if best.is_none_or(|(bd, _)| d < bd) {
+                best = Some((d, *p));
+            }
+        }
+    }
+    best.map(|(_, p)| p)
 }
 
 /// The stitch plan's settings for a page: the needle starts at its centre,
@@ -707,6 +865,29 @@ pub fn nearest_thread(chart: &tracedraw_emb_formats::charts::Chart, rgb: [u8; 3]
         .map(|(t, _)| Color::rgb8(t.rgb[0], t.rgb[1], t.rgb[2]))
 }
 
+/// Tests: the settings of an object converted with a tatami fill and a
+/// running-stitch outline.
+#[cfg(test)]
+pub(crate) fn converted_slots() -> Slots {
+    Slots {
+        fill: Slot::Set(StitchSettings::of(StitchType::Tatami)),
+        stroke: Slot::Set(StitchSettings::of(StitchType::Run)),
+        stroke_first: false,
+    }
+}
+
+/// Tests: convert `id` in `app` with [`converted_slots`].
+#[cfg(test)]
+pub(crate) fn convert(app: &mut crate::app::App, id: ShapeId) {
+    let Some(shape) = app.doc().find_shape(id).cloned() else {
+        return;
+    };
+    app.run(tracedraw_core::Command::SetObjectData {
+        shape: id,
+        data: data_with(&shape, &converted_slots()),
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -748,23 +929,30 @@ mod tests {
     }
 
     #[test]
-    fn automatic_rule_sews_fill_then_outline() {
+    fn an_object_sews_only_once_converted() {
         let mut s = square(1, 0.0, 0.0, 10.0);
         s.stroke = Some(Stroke::hairline(Color::rgb8(0, 0, 255)));
-        let parts = sewn(&s, ds().fabric);
-        let kinds: Vec<_> = parts
+        // A plain vector sews nothing.
+        assert!(sewn(&s, ds().fabric).is_empty());
+        // The panel still offers the fabric's defaults for its parts.
+        let (fill, auto) = part_settings(&s, ds().fabric, Part::Fill);
+        assert_eq!((fill.kind, auto), (StitchType::Tatami, true));
+        // Converted, it sews its fill then its outline.
+        s.data = data_with(&s, &converted_slots());
+        let kinds: Vec<_> = sewn(&s, ds().fabric)
             .iter()
             .map(|(p, st, auto)| (*p, st.kind, *auto))
             .collect();
         assert_eq!(
             kinds,
             vec![
-                (Part::Fill, StitchType::Tatami, true),
-                (Part::Stroke, StitchType::Run, true)
+                (Part::Fill, StitchType::Tatami, false),
+                (Part::Stroke, StitchType::Run, false)
             ]
         );
-        s.fill = Fill::None;
-        assert_eq!(sewn(&s, ds().fabric).len(), 1);
+        // Removing the stitches makes it a plain vector again.
+        s.data = data_with(&s, &Slots::AUTO);
+        assert!(sewn(&s, ds().fabric).is_empty());
     }
 
     #[test]
@@ -799,6 +987,7 @@ mod tests {
             shapes: vec![id],
             stroke: Some(Stroke::hairline(Color::rgb8(0, 0, 255))),
         });
+        convert(&mut app, id);
         let page = app.page;
         let doc = app.doc().clone();
         let pv = preview(&doc, page, &ds());

@@ -253,7 +253,13 @@ fn fill(rings: &[Polyline], r: &Rows, out: &mut Vec<Stitch>) {
             start_row += 1;
         }
         let Some(j) = used.get(start_row).and_then(|u| u.iter().position(|x| !*x)) else { return };
-        let (mut k, mut seg) = (start_row, j);
+        // The first section starts at the first row; each later one at the part nearest the
+        // needle that leaves no unsewn row before it (a stem finished before the crown, not
+        // left for later).
+        let (mut k, mut seg) = match out.last() {
+            Some(last) if !first_section => nearest_head(&rows, &used, start_row, f.to_rows(last.point())).unwrap_or((start_row, j)),
+            _ => (start_row, j),
+        };
         let Some(&(a, b)) = rows.get(k).and_then(|r| r.1.get(seg)) else { return };
         // Start at the end nearer the needle.
         let mut forward = match out.last() {
@@ -382,6 +388,30 @@ fn near_edge(edges: &[Edge], p: (f64, f64), d: f64) -> bool {
         let t = if l2 > 0.0 { (((p.0 - a.0) * ex + (p.1 - a.1) * ey) / l2).clamp(0.0, 1.0) } else { 0.0 };
         (a.0 + ex * t - p.0).hypot(a.1 + ey * t - p.1) <= d
     })
+}
+
+/// The unsewn row segment nearest `at` (row space) that can start a section: none of the row
+/// before it that overlaps it is left unsewn. As (row, segment).
+fn nearest_head(rows: &[(f64, Vec<(f64, f64)>)], used: &[Vec<bool>], from_row: usize, at: (f64, f64)) -> Option<(usize, usize)> {
+    let unsewn = |k: usize, i: usize| !used.get(k).and_then(|u| u.get(i)).copied().unwrap_or(true);
+    let mut best: Option<(f64, (usize, usize))> = None;
+    for (k, (v, segs)) in rows.iter().enumerate().skip(from_row) {
+        for (i, &(a, b)) in segs.iter().enumerate() {
+            if !unsewn(k, i) {
+                continue;
+            }
+            let blocked = k > 0
+                && rows.get(k - 1).is_some_and(|(_, prev)| prev.iter().enumerate().any(|(pi, &(pa, pb))| unsewn(k - 1, pi) && pa < b && pb > a));
+            if blocked {
+                continue;
+            }
+            let d = (a - at.0).hypot(v - at.1).min((b - at.0).hypot(v - at.1));
+            if best.is_none_or(|(bd, _)| d < bd) {
+                best = Some((d, (k, i)));
+            }
+        }
+    }
+    best.map(|(_, h)| h)
 }
 
 fn mark(used: &mut [Vec<bool>], k: usize, seg: usize) {
