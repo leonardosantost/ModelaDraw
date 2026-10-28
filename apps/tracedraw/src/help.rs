@@ -173,6 +173,7 @@ pub fn docker_topic(t: DockerTab) -> &'static str {
         DockerTab::Properties => "objects/properties-docker",
         DockerTab::Objects => "objects/objects-and-layers",
         DockerTab::Hints => "get-started/hints",
+        DockerTab::ModelaNesting => "objects/transforming",
         DockerTab::Transformations => "objects/transforming#transformations-docker",
         DockerTab::Undo => "get-started/undo-and-views#undo-docker",
         DockerTab::AlignDistribute => "objects/align-distribute",

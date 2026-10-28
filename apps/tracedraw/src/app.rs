@@ -1686,6 +1686,7 @@ pub enum DockerTab {
     Properties,
     Objects,
     Hints,
+    ModelaNesting,
     Transformations,
     Undo,
     AlignDistribute,
@@ -1730,10 +1731,11 @@ pub enum DockerTab {
 }
 
 impl DockerTab {
-    pub const ALL: [DockerTab; 44] = [
+    pub const ALL: [DockerTab; 45] = [
         DockerTab::Properties,
         DockerTab::Objects,
         DockerTab::Hints,
+        DockerTab::ModelaNesting,
         DockerTab::Transformations,
         DockerTab::Undo,
         DockerTab::AlignDistribute,
@@ -1784,6 +1786,7 @@ impl DockerTab {
         &[
             DockerTab::Properties,
             DockerTab::Objects,
+            DockerTab::ModelaNesting,
             DockerTab::Pages,
             DockerTab::Comments,
             DockerTab::ObjectData,
@@ -1847,6 +1850,7 @@ impl DockerTab {
             DockerTab::Properties => "docker.properties",
             DockerTab::Objects => "docker.objects",
             DockerTab::Hints => "docker.hints",
+            DockerTab::ModelaNesting => "docker.modela_nesting",
             DockerTab::Transformations => "docker.transformations",
             DockerTab::Undo => "docker.undo",
             DockerTab::AlignDistribute => "docker.align_distribute",

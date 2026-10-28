@@ -26,6 +26,7 @@ fn dim(ui: &mut Ui, text: String) {
 
 pub fn show(app: &mut App, ui: &mut Ui, tab: DockerTab) {
     match tab {
+        DockerTab::ModelaNesting => crate::modela_nesting::panel(app, ui),
         DockerTab::AlignDistribute => crate::ui::align_docker::align_distribute(app, ui),
         DockerTab::Shaping => crate::ui::shaping_docker::shaping(app, ui),
         DockerTab::StepAndRepeat => step_and_repeat(app, ui),
