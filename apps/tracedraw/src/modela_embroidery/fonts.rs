@@ -179,4 +179,16 @@ mod tests {
         assert!(!dir.parent().unwrap().join("evil.txt").exists());
         let _ = std::fs::remove_dir_all(&dir);
     }
+
+    /// The real download from the release, into the preferences folder:
+    /// run with `--ignored`.
+    #[test]
+    #[ignore]
+    fn live_download_installs_the_library() {
+        let ctx = egui::Context::default();
+        let n = run(&ctx).unwrap();
+        println!("{n} fonts in {:?}", library::user_folder());
+        assert!(n >= 50);
+        assert!(library::user_folder().unwrap().join("FONTS.md").is_file());
+    }
 }
