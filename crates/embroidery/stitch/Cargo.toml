@@ -1,0 +1,28 @@
+[package]
+name = "tracedraw-emb-stitch"
+version.workspace = true
+edition = "2024"
+license.workspace = true
+description = "Embroidery stitch generators for TraceDraw: runs, satins, Satin Blocks, tatami and other fills"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+
+[dependencies]
+tracedraw-core.workspace = true
+kurbo.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+proptest = "1"
+serde_json.workspace = true
+
+# The exact medial axis for Convert to Satin. Not in the web build: the
+# Voronoi crate needs random numbers the browser build doesn't set up, and
+# wasm can't catch a panic in it; the web app thins.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+centerline = { version = "0.14", default-features = false, features = ["glam"] }
+boostvoronoi = "0.12"
+vector-traits = { version = "0.6", default-features = false, features = ["glam"] }

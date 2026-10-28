@@ -6,7 +6,7 @@ checked screenshot behind it.
 "partial" names what is missing. "baked" means the result is applied once
 instead of staying live and editable. The goal is every row at "works".
 
-Counts: works 190, partial 6 (`.cdr` content coverage; CMX import; print preview; print merge; colour styles; Find and Replace), missing 1 (system windows), not applicable 4, icons close but not pixel-identical.
+Counts: works 190, partial 7 (`.cdr` content coverage; CMX import; print preview; print merge; colour styles; Find and Replace; Modela Embroidery), missing 1 (system windows), not applicable 4, icons close but not pixel-identical.
 
 ## 1. Selection and navigation
 
@@ -87,6 +87,7 @@ Counts: works 190, partial 6 (`.cdr` content coverage; CMX import; print preview
 | Step and Repeat | works |
 | Fit Objects to Path panel: objects spread evenly or at a fixed distance along a path, a start offset, turned with the path, reversed, with a preview (see `help/en/objects/align-distribute.md`, #1027) | works |
 | Modela Nesting panel: arrange selected groups and free objects on the current page, starting with its width and units, with spacing and optional 90-degree rotation; resize the page to the configured width and used length in one undo step | works (bounding-box placement; see `behavior/modela-nesting.md`) |
+| Modela Embroidery: Embroidery panel (fill and outline stitch types and settings per object, automatic rule, sewing sequence, hoop, fabric and thread chart), embroidery bar (Vector and Stitches views, density map, sew-out player, Add Lettering, Convert to Satin, Remove Overlaps, Sort by Color, Center in Hoop), satin lettering in the built-in font, Check Design with fixes, machine file export (DST, TAP, PES, JEF, EXP, VP3, XXX, U01) and open (also DSB, DSZ, HUS) | partial (no digitized fonts, realistic view, mockups or interactive satin tools; see `behavior/modela-embroidery.md`) |
 | Align with pixel grid | works |
 
 ## 4. Text

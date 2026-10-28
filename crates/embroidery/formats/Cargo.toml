@@ -1,0 +1,18 @@
+[package]
+name = "tracedraw-emb-formats"
+version.workspace = true
+edition = "2024"
+license.workspace = true
+description = "Machine embroidery formats for TraceDraw: a stitch design model, readers and writers, hoops and thread charts"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest = "1"

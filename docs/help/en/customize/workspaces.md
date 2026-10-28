@@ -13,8 +13,10 @@ interface. Choose one from the selector at the top right, in
 - [[menu.window.workspace_default]]: the usual setup.
 - [[menu.window.workspace_modeling]]: the full design setup with the Modela
   Nesting panel open.
-- [[menu.window.workspace_embroidery]]: the full design setup with the Objects
-  panel open, ready for embroidery tools.
+- [[menu.window.workspace_embroidery]]: the Embroidery panel (stitch types,
+  sewing sequence, hoop, fabric and threads) and the embroidery bar (stitch
+  view, Convert to Satin, Sort by Color, export and open DST, PES, JEF, EXP,
+  VP3, XXX, U01 and TAP machine files).
 - [[menu.window.workspace_lite]]: fewer bars, for a first start.
 - [[menu.window.workspace_classic]], [[menu.window.workspace_illustration]] and
   [[menu.window.workspace_page_layout]]: bars and panels for those kinds of

@@ -104,6 +104,7 @@ pub fn draw_canvas(app: &App, painter: &Painter, rect: ERect) {
     // objects stay where they are and their outline shows where they
     // would go; the handles wait for the release.
     draw_page(app, painter, rect, None);
+    crate::modela_embroidery::draw_stitches(app, painter);
     let doc: &Document = app.doc();
     draw_text_frames(app, painter, preview);
 

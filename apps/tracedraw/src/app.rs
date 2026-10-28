@@ -1697,6 +1697,7 @@ pub enum DockerTab {
     ModelaProperties,
     ModelaGrading,
     ModelaNesting,
+    ModelaEmbroidery,
     Transformations,
     Undo,
     AlignDistribute,
@@ -1741,13 +1742,14 @@ pub enum DockerTab {
 }
 
 impl DockerTab {
-    pub const ALL: [DockerTab; 47] = [
+    pub const ALL: [DockerTab; 48] = [
         DockerTab::Properties,
         DockerTab::Objects,
         DockerTab::Hints,
         DockerTab::ModelaProperties,
         DockerTab::ModelaGrading,
         DockerTab::ModelaNesting,
+        DockerTab::ModelaEmbroidery,
         DockerTab::Transformations,
         DockerTab::Undo,
         DockerTab::AlignDistribute,
@@ -1801,6 +1803,7 @@ impl DockerTab {
             DockerTab::ModelaProperties,
             DockerTab::ModelaGrading,
             DockerTab::ModelaNesting,
+            DockerTab::ModelaEmbroidery,
             DockerTab::Pages,
             DockerTab::Comments,
             DockerTab::ObjectData,
@@ -1867,6 +1870,7 @@ impl DockerTab {
             DockerTab::ModelaProperties => "docker.modela_properties",
             DockerTab::ModelaGrading => "docker.modela_grading",
             DockerTab::ModelaNesting => "docker.modela_nesting",
+            DockerTab::ModelaEmbroidery => "docker.modela_embroidery",
             DockerTab::Transformations => "docker.transformations",
             DockerTab::Undo => "docker.undo",
             DockerTab::AlignDistribute => "docker.align_distribute",
@@ -3608,7 +3612,8 @@ impl App {
                 self.show_toolbox = true;
                 self.show_status_bar = true;
                 self.show_dockers = true;
-                self.docker_tab = DockerTab::Objects;
+                self.open_dockers = vec![DockerTab::ModelaEmbroidery, DockerTab::Objects];
+                self.docker_tab = DockerTab::ModelaEmbroidery;
                 self.show_rulers = true;
             }
             Workspace::Lite => {
@@ -7754,7 +7759,11 @@ mod tests {
         assert_eq!(app.settings.workspace, "embroidery");
         assert!(app.show_dockers);
         assert!(app.settings.palette.show_palette);
-        assert_eq!(app.docker_tab, DockerTab::Objects);
+        assert_eq!(app.docker_tab, DockerTab::ModelaEmbroidery);
+        assert_eq!(
+            app.open_dockers,
+            [DockerTab::ModelaEmbroidery, DockerTab::Objects]
+        );
 
         assert_eq!(Workspace::from_id("modeling"), Workspace::Modeling);
         assert_eq!(Workspace::from_id("embroidery"), Workspace::Embroidery);

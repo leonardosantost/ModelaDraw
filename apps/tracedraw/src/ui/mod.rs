@@ -374,6 +374,13 @@ fn root_frame(app: &mut App, ui: &mut Ui) {
             .resizable(false)
             .show(ui, |ui| crate::modela_modeling::top_bar(app, ui));
     }
+    if app.workspace == crate::app::Workspace::Embroidery {
+        Panel::top("modela_embroidery_bar")
+            .frame(Frame::new().fill(Tokens::panel()))
+            .exact_size(34.0)
+            .resizable(false)
+            .show(ui, |ui| crate::modela_embroidery::top_bar(app, ui));
+    }
     // The bars, where the layout puts them (see bars.rs). Outer panels
     // come first: the status bar (at the very bottom, or right under the
     // menu bar), then the toolbars, then the palettes and the toolbox.

@@ -29,6 +29,7 @@ pub fn show(app: &mut App, ui: &mut Ui, tab: DockerTab) {
         DockerTab::ModelaProperties => crate::modela_modeling::properties_panel(app, ui),
         DockerTab::ModelaGrading => crate::modela_modeling::grading_panel(app, ui),
         DockerTab::ModelaNesting => crate::modela_nesting::panel(app, ui),
+        DockerTab::ModelaEmbroidery => crate::modela_embroidery::panel(app, ui),
         DockerTab::AlignDistribute => crate::ui::align_docker::align_distribute(app, ui),
         DockerTab::Shaping => crate::ui::shaping_docker::shaping(app, ui),
         DockerTab::StepAndRepeat => step_and_repeat(app, ui),

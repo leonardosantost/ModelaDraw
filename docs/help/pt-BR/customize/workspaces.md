@@ -14,8 +14,10 @@ direito, em [[menu.window > menu.window.workspace]], ou na página
 - [[menu.window.workspace_default]]: a configuração de costume.
 - [[menu.window.workspace_modeling]]: o ambiente completo de design com o
   painel Encaixe Modela aberto.
-- [[menu.window.workspace_embroidery]]: o ambiente completo de design com o
-  painel Objetos aberto, pronto para as ferramentas de bordado.
+- [[menu.window.workspace_embroidery]]: o painel Bordado (tipos de ponto,
+  sequência, bastidor, tecido e linhas) e a barra de bordado (visão de
+  pontos, Converter em cetim, Ordenar por cor, exportar e abrir arquivos de
+  máquina DST, PES, JEF, EXP, VP3, XXX, U01 e TAP).
 - [[menu.window.workspace_lite]]: menos barras, para um primeiro uso.
 - [[menu.window.workspace_classic]], [[menu.window.workspace_illustration]] e
   [[menu.window.workspace_page_layout]]: barras e painéis para esses tipos de
