@@ -492,7 +492,7 @@ impl Installer {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn download(url: &str) -> Result<Box<dyn std::io::Read + Send>, String> {
+pub(crate) fn download(url: &str) -> Result<Box<dyn std::io::Read + Send>, String> {
     use ureq::tls::{RootCerts, TlsConfig};
     let agent: ureq::Agent = ureq::Agent::config_builder()
         .timeout_connect(Some(std::time::Duration::from_secs(20)))

@@ -181,6 +181,30 @@ spacing (0.8 to 5 times the height); the letters are laid out again where
 they are. Characters the font does not have are left out and named in the
 status bar.
 
+The Font list (in the Lettering section, for new lettering with nothing
+selected and for the selected lettering) has the built-in font and the
+digitized embroidery fonts of the font library. Download Embroidery Fonts
+(Update Embroidery Fonts once there are fonts) fetches the library, a zip
+of about 45 MB on the project's `embroidery-fonts` release, in the
+background, and unpacks it into `embroidery-fonts` in the preferences
+folder (a failed download keeps the fonts there were); the list reads it
+again. The library holds only the fonts whose licences let everyone use
+and share them (SIL Open Font License, CC BY, CC BY-SA, public domain),
+unchanged, each with its licence, and `FONTS.md` with the credits.
+Fonts in the same format can also be put in that folder, or in a folder
+named by `MODELADRAW_EMBROIDERY_FONTS`.
+
+In a digitized font, lettering is a group of the font's pieces, each sewn
+as the font digitized it (satin columns, fills, runs, with their own
+direction and density), in the lettering's colour (the font's own colours
+when it has several). Its settings are kept in the group's data under
+`modela.embroidery.lettering`, so editing the text, size, spacing or font
+lays the pieces out again inside the group; choosing the built-in font
+turns it back into a path, and the other way round, in one undo step. New
+lettering starts in the last font chosen, with a sample the font can sew
+(the sample in capitals, or letters the font has). The browser version has
+the built-in font only.
+
 ## Check Design
 
 The Check Design section lists what will sew badly, errors first, and

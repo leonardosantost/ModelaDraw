@@ -8,6 +8,7 @@
 //! in `README.md`.
 
 mod check;
+mod fonts;
 pub mod icons;
 mod letters;
 pub mod sew;
@@ -47,6 +48,8 @@ struct Prefs {
     fabric: String,
     chart: String,
     format: String,
+    /// The font new lettering starts in (the last one chosen).
+    lettering_font: String,
 }
 
 impl Default for Prefs {
@@ -60,6 +63,7 @@ impl Default for Prefs {
             fabric: "woven".into(),
             chart: "none".into(),
             format: "dst".into(),
+            lettering_font: tracedraw_emb_stitch::lettering::FONTS[0].0.into(),
         }
     }
 }
@@ -856,25 +860,41 @@ pub fn import_machine(app: &mut App) {
 
 /// A new lettering object in the built-in satin font, its baseline
 /// across the middle of the page, in the current outline colour.
-fn add_lettering(app: &mut App) {
+fn add_lettering(app: &mut App, font: &str) {
     let Some(layer) = app.active_layer() else {
         return;
     };
-    let l = tracedraw_emb_stitch::lettering::Lettering {
+    let mut l = tracedraw_emb_stitch::lettering::Lettering {
         text: tr("modela_embroidery.lettering_sample"),
         ..Default::default()
     };
-    let (w, _) = letters::strokes(&l);
-    let bb = kurbo::Shape::bounding_box(&w);
+    // The last font chosen, while the library still has it.
+    if letters::is_builtin(font) || tracedraw_emb_fonts::library::has(font) {
+        l.font = font.to_string();
+        l.text = letters::sample_text(font, &l.text);
+    }
     let size = app.page_size();
-    let x = size.width / 2.0 - bb.width() / 2.0;
-    let y = size.height / 2.0 - l.height / 2.0;
     let color = app
         .default_stroke()
         .map(|s| s.color)
         .unwrap_or(Color::BLACK);
     let id = app.engine.new_shape_id();
-    let (shape, _) = letters::new_shape(id, &l, x, y, color);
+    let made = {
+        let engine = &mut app.engine;
+        let mut ids = || engine.new_shape_id();
+        letters::new_shape(id, &l, 0.0, 0.0, color, &mut ids)
+    };
+    let (mut shape, _, w) = match made {
+        Ok(m) => m,
+        Err(e) => {
+            app.status = trf("modela_embroidery.font_failed", &[("error", &e)]);
+            return;
+        }
+    };
+    shape.transform = Affine::translate((
+        size.width / 2.0 - w / 2.0,
+        size.height / 2.0 - l.height / 2.0,
+    ));
     if app
         .run_batch_keeping_lines("Add Lettering", &[Command::AddShape { layer, shape }])
         .is_ok()
@@ -888,8 +908,18 @@ fn set_lettering(app: &mut App, id: ShapeId, l: &tracedraw_emb_stitch::lettering
     let Some(shape) = app.doc().find_shape(id).cloned() else {
         return;
     };
-    let (_, missing) = letters::strokes(l);
-    let cmds = letters::edit(&shape, l);
+    let edited = {
+        let engine = &mut app.engine;
+        let mut ids = || engine.new_shape_id();
+        letters::edit(&shape, l, &mut ids)
+    };
+    let (cmds, missing) = match edited {
+        Ok(e) => e,
+        Err(e) => {
+            app.status = trf("modela_embroidery.font_failed", &[("error", &e)]);
+            return;
+        }
+    };
     let _ = app.run_batch_keeping_lines("Lettering", &cmds);
     if !missing.is_empty() {
         let chars: String = missing.into_iter().collect();
@@ -1404,7 +1434,7 @@ fn tool_buttons(app: &mut App, ui: &mut Ui, p: &Prefs) {
     )
     .clicked()
     {
-        add_lettering(app);
+        add_lettering(app, &p.lettering_font);
     }
     if icons::labeled(
         ui,
@@ -1658,7 +1688,107 @@ struct TextDraft {
 }
 
 /// Lettering: add it, and edit the selected lettering object.
-fn lettering_section(app: &mut App, ui: &mut Ui) {
+/// The font a lettering uses: the built-in font or one of the library's,
+/// as a list to choose from. Returns the font chosen.
+fn font_combo(ui: &mut Ui, current: &str) -> Option<String> {
+    let installed = fonts::installed();
+    let name = |id: &str| {
+        tracedraw_emb_stitch::lettering::FONTS
+            .iter()
+            .find(|f| f.0 == id)
+            .map(|f| f.1.to_string())
+            .or_else(|| {
+                installed
+                    .iter()
+                    .find(|e| e.id == id)
+                    .map(|e| e.info.name.clone())
+            })
+            .unwrap_or_else(|| id.to_string())
+    };
+    let mut chosen = None;
+    egui::ComboBox::from_id_salt("modela_embroidery_font")
+        .selected_text(name(current))
+        .width(ui.available_width().min(220.0))
+        .show_ui(ui, |ui| {
+            for f in tracedraw_emb_stitch::lettering::FONTS {
+                let label = format!("{} ({})", f.1, tr("modela_embroidery.font_builtin"));
+                if ui.selectable_label(current == f.0, label).clicked() {
+                    chosen = Some(f.0.to_string());
+                }
+            }
+            if !installed.is_empty() {
+                ui.separator();
+            }
+            for e in &installed {
+                let r = ui.selectable_label(current == e.id, &e.info.name);
+                let r = if e.info.description.is_empty() {
+                    r
+                } else {
+                    r.on_hover_text(&e.info.description)
+                };
+                if r.clicked() {
+                    chosen = Some(e.id.clone());
+                }
+            }
+        })
+        .response
+        .on_hover_text(tr("modela_embroidery.font_tip"));
+    chosen
+}
+
+/// Download Embroidery Fonts, and where the download is.
+fn fonts_download(ui: &mut Ui) {
+    if !fonts::can_download() {
+        return;
+    }
+    match fonts::state() {
+        fonts::Download::Running(bytes) => {
+            ui.horizontal(|ui| {
+                ui.spinner();
+                ui.label(trf(
+                    "modela_embroidery.fonts_downloading",
+                    &[("mb", &format!("{:.1}", bytes as f64 / 1_048_576.0))],
+                ));
+            });
+            ui.ctx()
+                .request_repaint_after(std::time::Duration::from_millis(250));
+            return;
+        }
+        fonts::Download::Done(n) => {
+            ui.label(
+                egui::RichText::new(trf(
+                    "modela_embroidery.fonts_done",
+                    &[("n", &n.to_string())],
+                ))
+                .color(Tokens::text_dim()),
+            );
+        }
+        fonts::Download::Failed(e) => {
+            ui.colored_label(
+                ERROR,
+                trf("modela_embroidery.fonts_failed", &[("error", &e)]),
+            );
+        }
+        fonts::Download::Idle => {}
+    }
+    let key = if fonts::installed().is_empty() {
+        "modela_embroidery.fonts_download"
+    } else {
+        "modela_embroidery.fonts_update"
+    };
+    if icons::labeled(
+        ui,
+        Icon::OpenMachine,
+        &tr(key),
+        &tr("modela_embroidery.fonts_download_tip"),
+    )
+    .clicked()
+    {
+        fonts::start(ui.ctx());
+    }
+}
+
+fn lettering_section(app: &mut App, ui: &mut Ui, p: &mut Prefs) {
     egui::CollapsingHeader::new(tr("modela_embroidery.lettering"))
         .default_open(true)
         .show(ui, |ui| {
@@ -1668,6 +1798,13 @@ fn lettering_section(app: &mut App, ui: &mut Ui) {
                 _ => None,
             };
             let Some((id, l)) = lettering else {
+                // The font new lettering starts in.
+                ui.horizontal(|ui| {
+                    ui.label(tr("modela_embroidery.font"));
+                    if let Some(f) = font_combo(ui, &p.lettering_font) {
+                        p.lettering_font = f;
+                    }
+                });
                 if icons::labeled(
                     ui,
                     Icon::Lettering,
@@ -1676,8 +1813,9 @@ fn lettering_section(app: &mut App, ui: &mut Ui) {
                 )
                 .clicked()
                 {
-                    add_lettering(app);
+                    add_lettering(app, &p.lettering_font);
                 }
+                fonts_download(ui);
                 return;
             };
             let draft_id = egui::Id::new("modela_embroidery_text_draft");
@@ -1699,6 +1837,16 @@ fn lettering_section(app: &mut App, ui: &mut Ui) {
             }
             ui.ctx().data_mut(|d| d.insert_temp(draft_id, draft));
             let mut changed = commit;
+            ui.horizontal(|ui| {
+                ui.label(tr("modela_embroidery.font"));
+                if let Some(f) = font_combo(ui, &new.font) {
+                    if f != new.font {
+                        new.font = f.clone();
+                        p.lettering_font = f;
+                        changed = true;
+                    }
+                }
+            });
             changed |= number(
                 ui,
                 "modela_embroidery.letter_height",
@@ -1723,6 +1871,7 @@ fn lettering_section(app: &mut App, ui: &mut Ui) {
             if changed && new != l {
                 set_lettering(app, id, &new);
             }
+            fonts_download(ui);
         })
         .header_response
         .on_hover_text(tr("modela_embroidery.lettering_tip"));
@@ -1798,6 +1947,11 @@ fn top_of(app: &App, id: ShapeId) -> Option<(tracedraw_core::LayerId, ShapeId)> 
         .iter()
         .find_map(|l| l.shapes.iter().find(|s| holds(s, id)).map(|s| (l.id, s.id)))
 }
+
+/// A sewing-sequence row being moved. A distinct payload keeps this drag
+/// separate from the Objects docker even though both carry shape ids.
+#[derive(Clone, Copy)]
+struct SequenceDrag(ShapeId);
 
 /// Sew `moved` just before (or after) `target`, by moving its top-level
 /// object next to the target's in the stacking order.
@@ -2035,37 +2189,51 @@ pub fn sequence_panel(app: &mut App, ui: &mut Ui) {
                         kind_name(o.kind),
                         o.obj.stitches.len()
                     );
-                    let row = ui.horizontal(|ui| {
-                        ui.add_space(8.0);
-                        if let Some(n) = color_swatch(
-                            ui,
-                            egui::Id::new(("modela_seq_row", *i)),
-                            o.obj.thread.rgb,
-                            ds.chart.as_ref(),
-                        ) {
-                            recolor = Some((vec![(o.id, o.part)], n));
-                        }
-                        let handle = ui
-                            .dnd_drag_source(egui::Id::new(("modela_seq_drag", *i)), o.id, |ui| {
-                                ui.label("⠿");
-                            })
-                            .response
-                            .on_hover_text(tr("modela_embroidery.drag_tip"));
-                        let label = ui
-                            .selectable_label(selected, text)
-                            .on_hover_text(tr("modela_embroidery.sequence_row_tip"));
-                        if label.clicked() {
-                            pick = Some(o.id);
-                        }
-                        handle.union(label)
-                    });
-                    let r = row.response.union(row.inner);
-                    let rect = r.rect;
-                    if let Some(from) = r.dnd_hover_payload::<ShapeId>() {
-                        if *from != o.id {
+                    let (rect, row) = ui.allocate_exact_size(
+                        egui::vec2(ui.available_width(), 24.0),
+                        egui::Sense::click_and_drag(),
+                    );
+                    if selected {
+                        ui.painter()
+                            .rect_filled(rect, 0.0, crate::theme::Tokens::selected_row());
+                    } else if row.hovered() {
+                        ui.painter()
+                            .rect_filled(rect, 0.0, crate::theme::Tokens::hovered_row());
+                    }
+                    ui.scope_builder(
+                        egui::UiBuilder::new()
+                            .max_rect(rect)
+                            .layout(egui::Layout::left_to_right(egui::Align::Center)),
+                        |ui| {
+                            ui.add_space(8.0);
+                            if let Some(n) = color_swatch(
+                                ui,
+                                egui::Id::new(("modela_seq_row", *i)),
+                                o.obj.thread.rgb,
+                                ds.chart.as_ref(),
+                            ) {
+                                recolor = Some((vec![(o.id, o.part)], n));
+                            }
+                            ui.label(egui::RichText::new("⠿").color(Tokens::text_dim()));
+                            ui.label(egui::RichText::new(text).color(if selected {
+                                Tokens::ACCENT
+                            } else {
+                                Tokens::text()
+                            }));
+                        },
+                    );
+                    let row = row
+                        .on_hover_and_drag_cursor(egui::CursorIcon::Grab)
+                        .on_hover_text(tr("modela_embroidery.sequence_row_tip"));
+                    row.dnd_set_drag_payload(SequenceDrag(o.id));
+                    if row.clicked() {
+                        pick = Some(o.id);
+                    }
+                    if let Some(from) = row.dnd_hover_payload::<SequenceDrag>() {
+                        if from.0 != o.id {
                             let before = ui
                                 .ctx()
-                                .pointer_hover_pos()
+                                .pointer_latest_pos()
                                 .is_some_and(|q| q.y < rect.center().y);
                             let y = if before { rect.top() } else { rect.bottom() };
                             ui.painter().hline(
@@ -2075,13 +2243,13 @@ pub fn sequence_panel(app: &mut App, ui: &mut Ui) {
                             );
                         }
                     }
-                    if let Some(from) = r.dnd_release_payload::<ShapeId>() {
-                        if *from != o.id {
+                    if let Some(from) = row.dnd_release_payload::<SequenceDrag>() {
+                        if from.0 != o.id {
                             let before = ui
                                 .ctx()
-                                .pointer_interact_pos()
+                                .pointer_latest_pos()
                                 .is_some_and(|q| q.y < rect.center().y);
-                            drop = Some((*from, o.id, before));
+                            drop = Some((from.0, o.id, before));
                         }
                     }
                 }
@@ -2268,7 +2436,7 @@ pub fn panel(app: &mut App, ui: &mut Ui) {
     let before = p.clone();
     let ds = design(&p);
 
-    lettering_section(app, ui);
+    lettering_section(app, ui, &mut p);
 
     egui::CollapsingHeader::new(tr("modela_embroidery.stitches"))
         .default_open(true)
@@ -2795,6 +2963,115 @@ mod tests {
         );
     }
 
+    /// A two-letter digitized font in the library, "H" and "I" as satin
+    /// columns.
+    fn test_font() -> &'static str {
+        const SVG: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:inkstitch="http://inkstitch.org/namespace">
+          <g inkscape:label="GlyphLayer-H"><path d="M 0,0 L 0,-100 M 10,0 L 10,-100" style="fill:none;stroke:#000" inkstitch:satin_column="True"/></g>
+          <g inkscape:label="GlyphLayer-I"><path d="M 5,0 L 5,-100 M 15,0 L 15,-100" style="fill:none;stroke:#000" inkstitch:satin_column="True"/></g>
+        </svg>"##;
+        let id = "modeladraw_test_satin";
+        let info = tracedraw_emb_fonts::FontInfo {
+            name: "Test Satin".into(),
+            word_spacing: 25.0,
+            ..Default::default()
+        };
+        let font = tracedraw_emb_fonts::Font::from_parts(id, info, &[SVG.to_string()]).unwrap();
+        tracedraw_emb_fonts::library::insert(font);
+        id
+    }
+
+    #[test]
+    fn lettering_in_a_digitized_font_is_a_group_of_sewn_pieces_and_changes_back() {
+        let font = test_font();
+        let mut app = App::headless();
+        add_lettering(&mut app, font);
+        let id = app.selection[0];
+        let g = app.doc().find_shape(id).unwrap().clone();
+        let ShapeKind::Group { children } = &g.kind else {
+            panic!("a group: {:?}", g.kind);
+        };
+        assert!(!children.is_empty());
+        let l = letters::lettering_of(&g).unwrap();
+        assert_eq!(l.font, font);
+        // Every piece sews, with the font's own stitches (satin columns).
+        let fabric = DesignSettings::new("woven", "none").fabric;
+        assert!(children.iter().all(|c| !sew::sewn(c, fabric).is_empty()));
+        let pv = preview(&app, &Prefs::default());
+        assert!(!pv.parts.is_empty());
+        // New text lays the pieces out again inside the same group.
+        let mut more = l.clone();
+        more.text = "HIH".into();
+        set_lettering(&mut app, id, &more);
+        let g2 = app.doc().find_shape(id).unwrap();
+        let ShapeKind::Group { children: c2 } = &g2.kind else {
+            panic!("still a group");
+        };
+        assert!(c2.len() > children.len());
+        assert_eq!(
+            letters::lettering_of(g2).map(|l| l.text),
+            Some("HIH".into())
+        );
+        // The built-in font: back to one path sewn as a satin.
+        let mut sans = more.clone();
+        sans.font = tracedraw_emb_stitch::lettering::FONTS[0].0.into();
+        set_lettering(&mut app, id, &sans);
+        let s = app.doc().find_shape(id).unwrap();
+        assert!(matches!(s.kind, ShapeKind::Path { .. }));
+        assert_eq!(
+            letters::lettering_of(s).map(|l| l.font),
+            Some(sans.font.clone())
+        );
+        assert!(!s.data.iter().any(|(k, _)| k == letters::LETTERING_KEY));
+        app.undo();
+        assert!(matches!(
+            app.doc().find_shape(id).unwrap().kind,
+            ShapeKind::Group { .. }
+        ));
+    }
+
+    #[test]
+    fn a_font_the_library_lacks_falls_back_to_the_built_in_one() {
+        let mut app = App::headless();
+        add_lettering(&mut app, "no_such_font");
+        let s = app.doc().find_shape(app.selection[0]).unwrap();
+        assert!(matches!(s.kind, ShapeKind::Path { .. }));
+    }
+
+    /// Every font of the library (MODELADRAW_EMBROIDERY_FONTS) lays out a
+    /// lettering that sews: run with `--ignored`.
+    #[test]
+    #[ignore]
+    fn every_library_font_sews_its_sample() {
+        let fabric = DesignSettings::new("woven", "none").fabric;
+        let mut bad = vec![];
+        let all = fonts::installed();
+        for e in &all {
+            let mut app = App::headless();
+            add_lettering(&mut app, &e.id);
+            let ok = app
+                .selection
+                .first()
+                .and_then(|id| app.doc().find_shape(*id))
+                .is_some_and(|s| match &s.kind {
+                    ShapeKind::Group { children } => {
+                        children.iter().any(|c| !sew::sewn(c, fabric).is_empty())
+                    }
+                    _ => false,
+                });
+            if !ok || preview(&app, &Prefs::default()).design.stitch_count() < 20 {
+                bad.push(format!("{} ({}): {}", e.info.name, e.id, app.status));
+            }
+        }
+        println!(
+            "{} fonts, {} without stitches: {bad:#?}",
+            all.len(),
+            bad.len()
+        );
+        assert!(!all.is_empty() && bad.is_empty());
+    }
+
     fn rect(app: &mut App, r: Rect, c: [u8; 3]) -> ShapeId {
         let id = app
             .new_shape(ShapeKind::Rect {
@@ -2870,7 +3147,7 @@ mod tests {
     #[test]
     fn lettering_is_added_and_edited_in_one_step() {
         let mut app = App::headless();
-        add_lettering(&mut app);
+        add_lettering(&mut app, tracedraw_emb_stitch::lettering::FONTS[0].0);
         let id = app.selection[0];
         let s = app.doc().find_shape(id).unwrap().clone();
         let l = letters::lettering_of(&s).unwrap();

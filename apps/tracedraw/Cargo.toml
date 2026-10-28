@@ -26,6 +26,7 @@ tracedraw-vba-project.workspace = true
 tracedraw-emb-formats.workspace = true
 tracedraw-emb-stitch.workspace = true
 tracedraw-emb-plan.workspace = true
+tracedraw-emb-fonts.workspace = true
 kurbo.workspace = true
 tiny-skia.workspace = true
 serde.workspace = true
@@ -57,6 +58,8 @@ pollster = "0.4"
 arboard = { version = "3", default-features = false, features = ["wayland-data-control"] }
 # AI Drawing: HTTPS requests to the AI service the user sets up.
 ureq = { version = "3", features = ["platform-verifier"] }
+# The embroidery font library, downloaded as a zip.
+zip.workspace = true
 # Lossy WebP export (libwebp, BSD licence): the pure-Rust encoder writes
 # lossless files only (#592).
 webp = { version = "0.3", default-features = false }

@@ -13,6 +13,7 @@ members = [
     "crates/embroidery/formats",
     "crates/embroidery/stitch",
     "crates/embroidery/plan",
+    "crates/embroidery/fonts",
     "apps/tracedraw",
     "apps/tracedraw-cli",
 ]
@@ -37,6 +38,7 @@ tracedraw-vba-project = { path = "crates/vba-project" }
 tracedraw-emb-formats = { path = "crates/embroidery/formats" }
 tracedraw-emb-stitch = { path = "crates/embroidery/stitch" }
 tracedraw-emb-plan = { path = "crates/embroidery/plan" }
+tracedraw-emb-fonts = { path = "crates/embroidery/fonts" }
 
 kurbo = { version = "0.13", features = ["serde"] }
 tiny-skia = "0.12"

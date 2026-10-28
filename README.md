@@ -80,7 +80,9 @@ export it.
   start (green square) and end (red cross) where you want them.
 - **Sewing Sequence.** Every part in colour blocks: drag a row to reorder, click a swatch to
   change the thread. Sort by Color in one click.
-- **Lettering** in a built-in satin font, editable in place.
+- **Lettering** in a built-in satin font, or in any of about a hundred **digitized embroidery
+  fonts**: **Download Embroidery Fonts** fetches the free font library from inside the app, and
+  the lettering stays editable (text, size, spacing, font).
 - **Check Design** finds what would sew badly (too dense, too thin, too wide a satin, outside
   the hoop) and fixes it; **Remove Overlaps** cuts the hidden parts of covered fills; a density
   map and a stitch-by-stitch **sew-out player** show the result before it reaches the fabric.
