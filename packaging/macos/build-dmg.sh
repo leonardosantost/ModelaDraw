@@ -13,8 +13,8 @@ chmod +x "$APP/Contents/MacOS/"*
 # Icon: build .icns from the PNG set.
 ICONSET="$ROOT/dist/modeladraw.iconset"; rm -rf "$ICONSET"; mkdir -p "$ICONSET"
 for s in 16 32 128 256 512; do
-  cp "$ROOT/assets/icon/tracedraw-$s.png" "$ICONSET/icon_${s}x${s}.png"
-  d=$((s*2)); cp "$ROOT/assets/icon/tracedraw-$d.png" "$ICONSET/icon_${s}x${s}@2x.png"
+  cp "$ROOT/assets/icon/modeladraw-$s.png" "$ICONSET/icon_${s}x${s}.png"
+  d=$((s*2)); cp "$ROOT/assets/icon/modeladraw-$d.png" "$ICONSET/icon_${s}x${s}@2x.png"
 done
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/modeladraw.icns"
 

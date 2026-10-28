@@ -364,7 +364,7 @@ jobs:
               web/index.html > site/index.html
           grep -q "data-wasm-size=\"$size\"" site/index.html
           if grep -q "@VERSION@" site/index.html; then exit 1; fi
-          cp assets/icon/tracedraw-256.png site/icon-256.png
+          cp assets/icon/modeladraw-256.png site/icon-256.png
           (cd site && zip -r "../dist/modeladraw-${{ steps.ver.outputs.version }}-web.zip" .)
 
       # The font folder of the published page (web/fonts.txt): free fonts

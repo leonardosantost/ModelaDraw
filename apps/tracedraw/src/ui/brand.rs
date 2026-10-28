@@ -29,7 +29,7 @@ pub fn icon(ctx: &Context) -> Option<TextureHandle> {
 
 /// The embedded 128 px icon as an egui image.
 pub(crate) fn icon_image() -> Option<egui::ColorImage> {
-    let bytes = include_bytes!("../../../../assets/icon/tracedraw-128.png");
+    let bytes = include_bytes!("../../../../assets/icon/modeladraw-128.png");
     let img = image::load_from_memory(bytes).ok()?.to_rgba8();
     let (w, h) = (img.width() as usize, img.height() as usize);
     Some(egui::ColorImage::from_rgba_unmultiplied(

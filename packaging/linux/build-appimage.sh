@@ -11,7 +11,7 @@ DIR="$ROOT/dist/AppDir"; rm -rf "$DIR"
 mkdir -p "$DIR/usr/bin" "$DIR/usr/share/applications" "$DIR/usr/share/icons/hicolor/256x256/apps"
 cp "$BIN/modeladraw" "$BIN/tracedraw-cli" "$DIR/usr/bin/"
 cp "$ROOT/packaging/linux/modeladraw.desktop" "$DIR/usr/share/applications/"
-cp "$ROOT/assets/icon/tracedraw-256.png" "$DIR/usr/share/icons/hicolor/256x256/apps/modeladraw.png"
+cp "$ROOT/assets/icon/modeladraw-256.png" "$DIR/usr/share/icons/hicolor/256x256/apps/modeladraw.png"
 TOOL="$ROOT/dist/linuxdeploy.AppImage"
 [ -f "$TOOL" ] || curl -sSL -o "$TOOL" https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-$TOOL_ARCH.AppImage
 chmod +x "$TOOL"

@@ -107,7 +107,7 @@ in `docs/images/` saved as PNG (1600 x 950): the poster (`hero`), curves,
 type, fills, effects, trace, export and languages.
 
 **Store logos**: optional; the package carries its own tiles. If asked
-for a square logo, `assets/icon/tracedraw-512.png` scaled to the size
+for a square logo, `assets/icon/modeladraw-512.png` scaled to the size
 requested.
 
 ## Packages

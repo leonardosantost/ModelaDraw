@@ -91,6 +91,6 @@ assets = [
     ["target/release/modeladraw", "usr/bin/", "755"],
     ["target/release/tracedraw-cli", "usr/bin/", "755"],
     ["../../packaging/linux/modeladraw.desktop", "usr/share/applications/", "644"],
-    ["../../assets/icon/tracedraw-256.png", "usr/share/icons/hicolor/256x256/apps/modeladraw.png", "644"],
+    ["../../assets/icon/modeladraw-256.png", "usr/share/icons/hicolor/256x256/apps/modeladraw.png", "644"],
     ["../../README.md", "usr/share/doc/modeladraw/README", "644"],
 ]

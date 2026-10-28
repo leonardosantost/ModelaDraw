@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/icon/tracedraw-256.png" alt="ModelaDraw icon" width="128" height="128">
+  <img src="assets/icon/modeladraw-256.png" alt="ModelaDraw icon" width="128" height="128">
 </p>
 
 <h1 align="center">ModelaDraw</h1>
