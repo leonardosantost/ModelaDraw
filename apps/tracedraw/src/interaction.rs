@@ -1069,6 +1069,9 @@ impl App {
             self.view.pan(response.drag_delta());
             return;
         }
+        if crate::modela_modeling::canvas_input(self, response, p) {
+            return;
+        }
         // A right click during a move, scale, rotation or skew: the change
         // goes to copies on release, the originals stay (again: not).
         if self.transforming() {

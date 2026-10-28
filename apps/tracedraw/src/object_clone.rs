@@ -176,6 +176,24 @@ fn unlinked_data(data: &[(String, String)]) -> Vec<(String, String)> {
         .collect()
 }
 
+/// Build a linked clone at the master's current position. Modela grading
+/// uses this to create size instances in one undo step.
+pub fn linked_copy(master: &Shape, id: ShapeId, engine: &mut tracedraw_core::Engine) -> Shape {
+    let mut shape = crate::app::reid_pub(master.clone(), id, engine);
+    let state: Vec<(Prop, Follow)> = props_of(master)
+        .iter()
+        .map(|prop| {
+            (
+                *prop,
+                Follow::Linked(hash_prop(master, *prop), hash_prop(&shape, *prop)),
+            )
+        })
+        .collect();
+    shape.data = link_data(&shape.data, master.id, &state);
+    shape.uid = None;
+    shape
+}
+
 fn walk<'a>(s: &'a Shape, out: &mut Vec<&'a Shape>) {
     out.push(s);
     match &s.kind {

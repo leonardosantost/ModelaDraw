@@ -105,6 +105,8 @@ pub fn draw_canvas(app: &App, painter: &Painter, rect: ERect) {
     // would go; the handles wait for the release.
     draw_page(app, painter, rect, None);
     crate::modela_embroidery::draw_stitches(app, painter);
+    crate::modela_modeling::draw_molds(app, painter);
+    crate::modela_modeling::draw_tool_feedback(app, painter);
     let doc: &Document = app.doc();
     draw_text_frames(app, painter, preview);
 
