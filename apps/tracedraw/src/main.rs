@@ -99,6 +99,7 @@ mod mixed;
 #[cfg(test)]
 mod mockup_tests;
 mod modela_nesting;
+mod modela_workspace;
 mod multipage;
 mod net;
 mod new_document;

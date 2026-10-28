@@ -2,9 +2,11 @@
 
 A workspace is how the window is set up: which bars show and where they
 sit, the toolbox, keyboard shortcuts, the colour palette options and the
-interface's look. Window > Workspace picks a built-in one (Default, Lite,
-Classic, Illustration, Page Layout, Touch); the user's own setup can be
-kept in a file and brought back.
+interface's look. The selector at the right of the menu bar and Window >
+Workspace pick a built-in one (Design (Default), Modeling, Embroidery, Lite,
+Classic, Illustration, Page Layout, Touch); the user's own setup can be kept
+in a file and brought back. Modeling opens the Modela Nesting panel;
+Embroidery opens the Objects panel as its starting point.
 
 ## Touch
 

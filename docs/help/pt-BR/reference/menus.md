@@ -401,6 +401,8 @@ próprios atalhos; veja
 | [[menu.window.dock_window]] | [O espaço de trabalho](../get-started/workspace.md#several-drawings) |
 | [[menu.window.workspace]] | [Espaços de trabalho](../customize/workspaces.md) |
 | [[menu.window.workspace_default]] | [Espaços de trabalho](../customize/workspaces.md) |
+| [[menu.window.workspace_modeling]] | [Espaços de trabalho](../customize/workspaces.md) |
+| [[menu.window.workspace_embroidery]] | [Espaços de trabalho](../customize/workspaces.md) |
 | [[menu.window.workspace_lite]] | [Espaços de trabalho](../customize/workspaces.md) |
 | [[menu.window.workspace_classic]] | [Espaços de trabalho](../customize/workspaces.md) |
 | [[menu.window.workspace_illustration]] | [Espaços de trabalho](../customize/workspaces.md) |

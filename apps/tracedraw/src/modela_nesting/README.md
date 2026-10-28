@@ -9,6 +9,11 @@ require resolving only these small registration points:
 4. `help.rs`: the help topic fallback
 5. `lang/*.toml`: the `docker.modela_nesting` and `modela_nesting.*` strings
 
+The Modela workspace selector is isolated in the sibling
+`modela_workspace.rs`. Its TraceDraw integration is limited to the module
+registration in `main.rs`, one call in the menu bar, the `Modeling` and
+`Embroidery` variants and defaults in `app.rs`, and their translated names.
+
 The UI, validation, placement algorithm, page resizing, transforms and tests
 are all in `mod.rs`. A contour-based engine can replace `pack` while preserving
 the panel and the four integration points above.

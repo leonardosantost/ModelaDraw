@@ -2,8 +2,8 @@
 
 A workspace is how the window is set up: which bars show and where, the
 toolbox, keyboard shortcuts, the color palette options and the look of the
-interface. Choose one in [[menu.window > menu.window.workspace]], or on the
-[[options.workspace]] page of
+interface. Choose one from the selector at the top right, in
+[[menu.window > menu.window.workspace]], or on the [[options.workspace]] page of
 [[menu.tools > menu.tools.options > menu.tools.options_workspaces]].
 
 ![The Workspaces options](../../img/customize-workspaces.png)
@@ -11,6 +11,10 @@ interface. Choose one in [[menu.window > menu.window.workspace]], or on the
 ## Built-in workspaces {#built-in}
 
 - [[menu.window.workspace_default]]: the usual setup.
+- [[menu.window.workspace_modeling]]: the full design setup with the Modela
+  Nesting panel open.
+- [[menu.window.workspace_embroidery]]: the full design setup with the Objects
+  panel open, ready for embroidery tools.
 - [[menu.window.workspace_lite]]: fewer bars, for a first start.
 - [[menu.window.workspace_classic]], [[menu.window.workspace_illustration]] and
   [[menu.window.workspace_page_layout]]: bars and panels for those kinds of

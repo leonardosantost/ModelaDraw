@@ -1788,6 +1788,9 @@ pub fn menu_bar(app: &mut App, ui: &mut Ui) {
             titles.push(menu(ui, "menu.tools", &mut |ui| tools_menu(app, ui)));
             titles.push(menu(ui, "menu.window", &mut |ui| window_menu(app, ui)));
             titles.push(menu(ui, "menu.help", &mut |ui| help_menu(app, ui)));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                crate::modela_workspace::selector(app, ui);
+            });
             switch_on_hover(ui.ctx(), &titles);
             open_with_alt(ui.ctx(), &titles, &keys, &blocked);
         });
@@ -3486,27 +3489,9 @@ fn window_menu(app: &mut App, ui: &mut Ui) {
     }
     sep(ui);
     sub(ui, "menu.window.workspace", |ui| {
-        for (key, ws) in [
-            (
-                "menu.window.workspace_default",
-                crate::app::Workspace::Default,
-            ),
-            ("menu.window.workspace_lite", crate::app::Workspace::Lite),
-            (
-                "menu.window.workspace_classic",
-                crate::app::Workspace::Classic,
-            ),
-            (
-                "menu.window.workspace_illustration",
-                crate::app::Workspace::Illustration,
-            ),
-            (
-                "menu.window.workspace_page_layout",
-                crate::app::Workspace::PageLayout,
-            ),
-            ("menu.window.workspace_touch", crate::app::Workspace::Touch),
-        ] {
-            if check(ui, key, "", app.workspace == ws) {
+        for ws in crate::app::Workspace::ALL {
+            let key = format!("menu.window.workspace_{}", ws.id());
+            if check(ui, &key, "", app.workspace == ws) {
                 app.set_workspace(ws);
             }
         }

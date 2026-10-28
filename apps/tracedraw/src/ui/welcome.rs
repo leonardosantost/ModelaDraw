@@ -246,6 +246,16 @@ fn workspace(app: &mut App, ui: &mut Ui) {
                     "welcome.ws_default_desc",
                 ),
                 (
+                    crate::app::Workspace::Modeling,
+                    "menu.window.workspace_modeling",
+                    "welcome.ws_default_desc",
+                ),
+                (
+                    crate::app::Workspace::Embroidery,
+                    "menu.window.workspace_embroidery",
+                    "welcome.ws_default_desc",
+                ),
+                (
                     crate::app::Workspace::Lite,
                     "menu.window.workspace_lite",
                     "welcome.ws_lite_desc",

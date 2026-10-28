@@ -2,8 +2,9 @@
 
 Um espaço de trabalho é como a janela está montada: quais barras aparecem e
 onde, a caixa de ferramentas, os atalhos de teclado, as opções da paleta de
-cores e a aparência da interface. Escolha um em
-[[menu.window > menu.window.workspace]], ou na página [[options.workspace]] de
+cores e a aparência da interface. Escolha um no seletor do canto superior
+direito, em [[menu.window > menu.window.workspace]], ou na página
+[[options.workspace]] de
 [[menu.tools > menu.tools.options > menu.tools.options_workspaces]].
 
 ![As opções de espaços de trabalho](../../img/customize-workspaces.png)
@@ -11,6 +12,10 @@ cores e a aparência da interface. Escolha um em
 ## Espaços de trabalho embutidos {#built-in}
 
 - [[menu.window.workspace_default]]: a configuração de costume.
+- [[menu.window.workspace_modeling]]: o ambiente completo de design com o
+  painel Encaixe Modela aberto.
+- [[menu.window.workspace_embroidery]]: o ambiente completo de design com o
+  painel Objetos aberto, pronto para as ferramentas de bordado.
 - [[menu.window.workspace_lite]]: menos barras, para um primeiro uso.
 - [[menu.window.workspace_classic]], [[menu.window.workspace_illustration]] e
   [[menu.window.workspace_page_layout]]: barras e painéis para esses tipos de

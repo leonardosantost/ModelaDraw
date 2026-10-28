@@ -1639,6 +1639,8 @@ pub enum EffectKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Workspace {
     Default,
+    Modeling,
+    Embroidery,
     Lite,
     Classic,
     Illustration,
@@ -1650,8 +1652,10 @@ pub enum Workspace {
 
 impl Workspace {
     /// Every built-in workspace, in the order the menus list them.
-    pub const ALL: [Workspace; 6] = [
+    pub const ALL: [Workspace; 8] = [
         Workspace::Default,
+        Workspace::Modeling,
+        Workspace::Embroidery,
         Workspace::Lite,
         Workspace::Classic,
         Workspace::Illustration,
@@ -1662,6 +1666,8 @@ impl Workspace {
     pub fn id(self) -> &'static str {
         match self {
             Workspace::Default => "default",
+            Workspace::Modeling => "modeling",
+            Workspace::Embroidery => "embroidery",
             Workspace::Lite => "lite",
             Workspace::Classic => "classic",
             Workspace::Illustration => "illustration",
@@ -1671,6 +1677,8 @@ impl Workspace {
     }
     pub fn from_id(id: &str) -> Self {
         match id {
+            "modeling" => Workspace::Modeling,
+            "embroidery" => Workspace::Embroidery,
             "lite" => Workspace::Lite,
             "classic" => Workspace::Classic,
             "illustration" => Workspace::Illustration,
@@ -3565,6 +3573,24 @@ impl App {
                 self.show_toolbox = true;
                 self.show_status_bar = true;
                 self.show_dockers = true;
+                self.show_rulers = true;
+            }
+            Workspace::Modeling => {
+                self.show_standard_toolbar = true;
+                self.show_property_bar = true;
+                self.show_toolbox = true;
+                self.show_status_bar = true;
+                self.show_dockers = true;
+                self.docker_tab = DockerTab::ModelaNesting;
+                self.show_rulers = true;
+            }
+            Workspace::Embroidery => {
+                self.show_standard_toolbar = true;
+                self.show_property_bar = true;
+                self.show_toolbox = true;
+                self.show_status_bar = true;
+                self.show_dockers = true;
+                self.docker_tab = DockerTab::Objects;
                 self.show_rulers = true;
             }
             Workspace::Lite => {
@@ -7684,6 +7710,26 @@ fn three_point_arc(a: Point, b: Point, c: Point) -> Option<tracedraw_core::BezPa
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn modela_workspaces_have_distinct_starting_panels_and_persisted_ids() {
+        let mut app = App::headless();
+
+        app.set_workspace(Workspace::Modeling);
+        assert_eq!(app.workspace, Workspace::Modeling);
+        assert_eq!(app.settings.workspace, "modeling");
+        assert!(app.show_dockers);
+        assert_eq!(app.docker_tab, DockerTab::ModelaNesting);
+
+        app.set_workspace(Workspace::Embroidery);
+        assert_eq!(app.workspace, Workspace::Embroidery);
+        assert_eq!(app.settings.workspace, "embroidery");
+        assert!(app.show_dockers);
+        assert_eq!(app.docker_tab, DockerTab::Objects);
+
+        assert_eq!(Workspace::from_id("modeling"), Workspace::Modeling);
+        assert_eq!(Workspace::from_id("embroidery"), Workspace::Embroidery);
+    }
 
     /// Duplicate, then the copy moved or scaled while it stays selected:
     /// the next Duplicate repeats that step from the copy, as the
