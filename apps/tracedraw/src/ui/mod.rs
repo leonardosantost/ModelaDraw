@@ -367,6 +367,13 @@ fn root_frame(app: &mut App, ui: &mut Ui) {
         .resizable(false)
         .show_separator_line(false)
         .show(ui, |ui| menus::menu_bar(app, ui));
+    if app.workspace == crate::app::Workspace::Modeling {
+        Panel::top("modela_modeling_bar")
+            .frame(Frame::new().fill(Tokens::panel()))
+            .exact_size(34.0)
+            .resizable(false)
+            .show(ui, |ui| crate::modela_modeling::top_bar(app, ui));
+    }
     // The bars, where the layout puts them (see bars.rs). Outer panels
     // come first: the status bar (at the very bottom, or right under the
     // menu bar), then the toolbars, then the palettes and the toolbox.
@@ -450,6 +457,17 @@ fn root_frame(app: &mut App, ui: &mut Ui) {
                 .resizable(false)
                 .frame(frame)
                 .show(ui, |ui| toolbox::toolbox(app, ui, dock));
+        }
+        if app.workspace == crate::app::Workspace::Modeling && dock == Dock::Left {
+            Panel::left("modela_toolbox")
+                .exact_size(40.0)
+                .resizable(false)
+                .frame(
+                    Frame::new()
+                        .fill(Tokens::panel())
+                        .inner_margin(egui::Margin::symmetric(3, 0)),
+                )
+                .show(ui, |ui| crate::modela_modeling::toolbox(app, ui));
         }
     }
 

@@ -98,6 +98,7 @@ mod mesh_tool;
 mod mixed;
 #[cfg(test)]
 mod mockup_tests;
+mod modela_modeling;
 mod modela_nesting;
 mod modela_workspace;
 mod multipage;
