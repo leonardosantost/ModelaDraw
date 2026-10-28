@@ -367,20 +367,6 @@ fn root_frame(app: &mut App, ui: &mut Ui) {
         .resizable(false)
         .show_separator_line(false)
         .show(ui, |ui| menus::menu_bar(app, ui));
-    if app.workspace == crate::app::Workspace::Modeling {
-        Panel::top("modela_modeling_bar")
-            .frame(Frame::new().fill(Tokens::panel()))
-            .exact_size(34.0)
-            .resizable(false)
-            .show(ui, |ui| crate::modela_modeling::top_bar(app, ui));
-    }
-    if app.workspace == crate::app::Workspace::Embroidery {
-        Panel::top("modela_embroidery_bar")
-            .frame(Frame::new().fill(Tokens::panel()))
-            .exact_size(34.0)
-            .resizable(false)
-            .show(ui, |ui| crate::modela_embroidery::top_bar(app, ui));
-    }
     // The bars, where the layout puts them (see bars.rs). Outer panels
     // come first: the status bar (at the very bottom, or right under the
     // menu bar), then the toolbars, then the palettes and the toolbox.
@@ -656,6 +642,26 @@ fn wheel_notch(unit: egui::MouseWheelUnit, web: bool) -> f32 {
     }
 }
 
+/// Whether a wheel event looks like two fingers on a touchpad rather
+/// than a mouse wheel turning. On the desktop a touchpad (and a touch
+/// mouse) scrolls in points, or in fractions of a line or sideways; a
+/// wheel turns in whole lines. In the browser both scroll in pixels, so
+/// only a sideways part tells a touchpad there.
+fn touchpad_wheel(unit: egui::MouseWheelUnit, delta: egui::Vec2, web: bool) -> bool {
+    if delta.x != 0.0 {
+        return true;
+    }
+    match (unit, web) {
+        (egui::MouseWheelUnit::Point, false) => true,
+        (egui::MouseWheelUnit::Line, false) => delta.y.fract() != 0.0,
+        _ => false,
+    }
+}
+
+/// How long after its last event a touchpad gesture keeps panning, so its
+/// glide and the parts of it straight up or down pan too (seconds).
+const TOUCHPAD_HOLD: f64 = 0.35;
+
 /// Points of egui's smoothed scroll delta that one wheel notch in
 /// `unit` adds up to: egui turns a line into `line_speed` points and a
 /// page into the window's height. On the desktop a notch stays at
@@ -694,34 +700,53 @@ pub(crate) fn drawing_window(app: &mut App, ui: &mut Ui, full: egui::Rect) {
     // Wheel: with the default setting the wheel zooms about the
     // pointer, Ctrl+wheel scrolls vertically and Alt+wheel
     // horizontally; with the scroll setting the wheel scrolls,
-    // Shift+wheel horizontally and Ctrl+wheel zooms. Pinch zooms.
+    // Shift+wheel horizontally and Ctrl+wheel zooms. Pinch zooms, and
+    // two fingers dragged on a touchpad pan, whatever the setting.
     if response.hovered() {
-        let (scroll, notches, zoom_delta, mods, unit) = ui.input(|i| {
+        let web = cfg!(target_arch = "wasm32");
+        let line = ui.ctx().options(|o| o.input_options.line_scroll_speed);
+        let (scroll, notches, zoom_delta, mods, unit, touchpad, now) = ui.input(|i| {
             // Wheel notches this frame (the smoothed delta is spread
             // over several frames, so the zoom steps come from the
             // raw events).
             let mut unit = None;
-            let notches: f32 = i
-                .events
-                .iter()
-                .map(|e| match e {
-                    egui::Event::MouseWheel { unit: u, delta, .. } => {
-                        unit = Some(*u);
-                        delta.y / wheel_notch(*u, cfg!(target_arch = "wasm32"))
+            let mut touchpad: Option<egui::Vec2> = None;
+            let mut notches = 0.0;
+            for e in &i.events {
+                if let egui::Event::MouseWheel { unit: u, delta, .. } = e {
+                    unit = Some(*u);
+                    notches += delta.y / wheel_notch(*u, web);
+                    if touchpad_wheel(*u, *delta, web) {
+                        let points = match u {
+                            egui::MouseWheelUnit::Point => *delta,
+                            _ => *delta * line,
+                        };
+                        *touchpad.get_or_insert(egui::Vec2::ZERO) += points;
                     }
-                    _ => 0.0,
-                })
-                .sum();
+                }
+            }
             (
                 i.smooth_scroll_delta,
                 notches,
                 i.zoom_delta(),
                 i.modifiers,
                 unit,
+                touchpad,
+                i.time,
             )
         });
+        // A touchpad gesture keeps panning for a moment after its last
+        // event that looked like one, so its glide pans too.
+        let touchpad_id = egui::Id::new("canvas_touchpad_until");
+        if touchpad.is_some() {
+            ui.data_mut(|d| d.insert_temp(touchpad_id, now + TOUCHPAD_HOLD));
+        }
+        let gliding = ui
+            .data(|d| d.get_temp::<f64>(touchpad_id))
+            .is_some_and(|until| now < until);
         // The unit of the last wheel event, kept while its smoothed
         // delta is still being spread over the next frames.
+        let wheeled = unit.is_some();
         let unit_id = egui::Id::new("canvas_wheel_unit");
         let unit = match unit {
             Some(u) => {
@@ -736,6 +761,16 @@ pub(crate) fn drawing_window(app: &mut App, ui: &mut Ui, full: egui::Rect) {
             let zoom_factor = 1.15f32.powf(notches);
             if zoom_delta != 1.0 {
                 app.view.zoom_at(h, zoom_delta);
+            } else if touchpad.is_some() || (gliding && wheeled) {
+                // The fingers' own movement, as it came: the touchpad has
+                // already smoothed it.
+                let d = touchpad.unwrap_or(scroll);
+                if d != egui::Vec2::ZERO {
+                    app.view.pan(d);
+                    ui.data_mut(|data| data.insert_temp(touchpad_id, now + TOUCHPAD_HOLD));
+                }
+            } else if gliding {
+                // The rest of the gesture's smoothed delta: no zoom.
             } else if app.settings.wheel_zooms {
                 if mods.alt && scroll != egui::Vec2::ZERO {
                     app.view.pan(egui::vec2(scroll.y, scroll.x));
@@ -746,7 +781,6 @@ pub(crate) fn drawing_window(app: &mut App, ui: &mut Ui, full: egui::Rect) {
                     // as a scroll is, so a notch zooms in one glide
                     // instead of one jump; its frames multiply to the same
                     // 1.15 a notch (#766), in the browser too (#1016).
-                    let line = ui.ctx().options(|o| o.input_options.line_scroll_speed);
                     let per_notch = smooth_wheel_notch(
                         unit,
                         line,
@@ -978,6 +1012,20 @@ mod tests {
     /// One browser wheel notch (100 pixels, or three lines at egui's
     /// web line speed of 8 points) zooms 15 %, as a desktop notch
     /// does; it zoomed about 5.7 times or 52 % at once (#1016).
+    #[test]
+    fn a_touchpad_scroll_is_told_from_a_wheel_notch() {
+        use egui::MouseWheelUnit::{Line, Point};
+        use egui::vec2;
+        // The desktop: a touchpad scrolls in points or in parts of lines.
+        assert!(super::touchpad_wheel(Point, vec2(0.0, 3.5), false));
+        assert!(super::touchpad_wheel(Line, vec2(0.0, 0.25), false));
+        assert!(!super::touchpad_wheel(Line, vec2(0.0, 1.0), false));
+        assert!(!super::touchpad_wheel(Line, vec2(0.0, -2.0), false));
+        // The browser: pixels from both, only sideways tells.
+        assert!(!super::touchpad_wheel(Point, vec2(0.0, 100.0), true));
+        assert!(super::touchpad_wheel(Point, vec2(4.0, 1.0), true));
+    }
+
     #[test]
     fn a_browser_wheel_notch_zooms_as_a_desktop_notch() {
         use egui::MouseWheelUnit::{Line, Page, Point};

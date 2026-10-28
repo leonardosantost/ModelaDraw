@@ -437,6 +437,8 @@ fn item_text_tip(
         crate::ui::propbar::draw_pic(ui.painter(), ir.expand(2.0), p, color);
     } else if let Some(g) = crate::ui::menu_glyphs::for_key(id) {
         crate::ui::menu_glyphs::draw(ui.painter(), ir, g, color);
+    } else if let Some(i) = crate::modela_embroidery::icons::for_menu(id) {
+        crate::modela_embroidery::icons::draw(ui.painter(), ir, i, color);
     }
     if r.clicked() {
         ui.close();
@@ -533,6 +535,9 @@ pub(crate) fn draw_menu_picture(
     } else if let Some(g) = crate::ui::menu_glyphs::for_key(key) {
         crate::ui::menu_glyphs::draw(painter, r, g, color);
         true
+    } else if let Some(i) = crate::modela_embroidery::icons::for_menu(key) {
+        crate::modela_embroidery::icons::draw(painter, r, i, color);
+        true
     } else {
         false
     }
@@ -543,6 +548,7 @@ pub(crate) fn has_menu_picture(key: &str) -> bool {
     menu_icon(key).is_some()
         || menu_pic(key).is_some()
         || crate::ui::menu_glyphs::for_key(key).is_some()
+        || crate::modela_embroidery::icons::for_menu(key).is_some()
 }
 
 /// Property bar picture for a menu item, when it has one.
@@ -1110,8 +1116,10 @@ pub(crate) mod replay {
 
     /// Items that would block on a native file chooser, start another
     /// program (an editor or the web browser) or close the window.
-    const SKIP: [&str; 16] = [
+    const SKIP: [&str; 18] = [
         "menu.file.send_to_mail",
+        "menu.file.machine_open",
+        "menu.file.machine_export",
         "menu.tools.macros_load",
         "menu.help.updates",
         "menu.help.community",
@@ -1941,6 +1949,12 @@ fn file_menu(app: &mut App, ui: &mut Ui) {
     }
     if item(ui, "menu.file.export", "Ctrl+E", doc) {
         app.export();
+    }
+    if item(ui, "menu.file.machine_open", "", doc) {
+        crate::modela_embroidery::import_machine(app);
+    }
+    if item(ui, "menu.file.machine_export", "", doc) {
+        crate::modela_embroidery::export_machine(app, ui.ctx());
     }
     sub(ui, "menu.file.export_for", |ui| {
         if item(ui, "menu.file.export_for_web", "", doc) {
@@ -3446,6 +3460,20 @@ pub(crate) fn toolbars_list(app: &mut App, ui: &mut Ui) {
     let tracker = app.settings.time_tracker.show_bar;
     if check(ui, "menu.window.toolbar_time_tracker", "", tracker) {
         app.settings.time_tracker.show_bar = !tracker;
+    }
+    // The workspace's own bar, in its workspace.
+    use crate::ui::bars::Bar;
+    for bar in [Bar::Embroidery, Bar::Modeling] {
+        let ws = match bar {
+            Bar::Embroidery => crate::app::Workspace::Embroidery,
+            _ => crate::app::Workspace::Modeling,
+        };
+        if app.workspace == ws {
+            let on = bar.visible(app);
+            if check(ui, bar.key(), "", on) {
+                bar.set_visible(app, !on);
+            }
+        }
     }
 }
 

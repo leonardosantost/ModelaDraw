@@ -9277,6 +9277,63 @@ fn a_wheel_notch_zooms_in_a_glide() {
     );
 }
 
+/// Two fingers dragged on a touchpad pan the view, up and down and
+/// sideways, even with the wheel zooming; its glide right after pans too;
+/// a pinch zooms; a mouse wheel's notch still zooms once the gesture is
+/// over.
+#[test]
+fn touchpad_fingers_pan_and_pinch_zooms() {
+    let (ctx, mut app, _) = setup();
+    assert!(app.settings.wheel_zooms);
+    let at = Pos2::new(700.0, 500.0);
+    let mut t = 10.0;
+    let mut step = |app: &mut App, events: Vec<Event>, dt: f64| {
+        t += dt;
+        let input = egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                Pos2::ZERO,
+                egui::vec2(1600.0, 1000.0),
+            )),
+            events,
+            time: Some(t),
+            ..Default::default()
+        };
+        let mut out = ctx.run_ui(input, |ui| crate::ui::root(app, ui));
+        out.textures_delta.clear();
+    };
+    let wheel = |unit, x: f32, y: f32, phase| Event::MouseWheel {
+        unit,
+        delta: egui::vec2(x, y),
+        phase,
+        modifiers: Modifiers::NONE,
+    };
+    step(&mut app, vec![Event::PointerMoved(at)], 1.0 / 60.0);
+    step(&mut app, vec![Event::PointerMoved(at)], 1.0 / 60.0);
+    let (z0, o0) = (app.view.zoom, app.view.origin);
+    use egui::MouseWheelUnit::{Line, Point};
+    use egui::TouchPhase::{Move, Start};
+    step(&mut app, vec![wheel(Point, 0.0, 12.0, Start)], 1.0 / 60.0);
+    step(&mut app, vec![wheel(Point, 8.0, 10.0, Move)], 1.0 / 60.0);
+    // The glide: straight down, and in lines on some systems.
+    step(&mut app, vec![wheel(Point, 0.0, 6.0, Move)], 1.0 / 60.0);
+    assert_eq!(app.view.zoom, z0, "two fingers do not zoom");
+    let moved = app.view.origin - o0;
+    assert!(
+        (moved.y - 28.0).abs() < 0.5 && (moved.x - 8.0).abs() < 0.5,
+        "panned by the fingers: {moved:?}"
+    );
+    // A pinch zooms about the pointer.
+    step(&mut app, vec![Event::Zoom(1.2)], 1.0 / 60.0);
+    assert!((app.view.zoom / z0 - 1.2).abs() < 1e-3);
+    // Once the gesture is over a mouse wheel notch zooms again.
+    let z1 = app.view.zoom;
+    step(&mut app, vec![wheel(Line, 0.0, 1.0, Move)], 1.0);
+    for _ in 0..60 {
+        step(&mut app, Vec::new(), 1.0 / 60.0);
+    }
+    assert!((app.view.zoom / z1 - 1.15).abs() < 0.01);
+}
+
 /// Ctrl+Z through a curve drawn with the Pen goes back to drawing it: the
 /// Pen is chosen again and a line goes on from the last node left,
 /// leaving along the mirror of its handle, with a curved preview; that

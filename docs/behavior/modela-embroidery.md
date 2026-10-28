@@ -1,8 +1,13 @@
 # Modela Embroidery
 
 The Embroidery workspace (the selector at the right of the menu bar, or
-Window > Workspace > Embroidery) opens the Embroidery panel and puts the
-embroidery bar under the menu bar. Everything lives in
+Window > Workspace > Embroidery) opens the Embroidery, Sewing Sequence and
+Hoop panels and shows the embroidery bar. The bar moves like the other
+toolbars: by its grip it docks in a row along the top or the bottom (beside
+another toolbar or in a row of its own), or floats in a small window anywhere;
+closed, it comes back from Window > Toolbars (or the bar menu), and Reset
+Bar Positions puts it back along the top. The Pattern Making workspace's bar
+moves the same way. Everything lives in
 `apps/tracedraw/src/modela_embroidery/`; the stitch generators, the stitch
 plan and the machine formats are the `tracedraw-emb-stitch`,
 `tracedraw-emb-plan` and `tracedraw-emb-formats` crates in
@@ -33,11 +38,13 @@ a set of stitch settings in millimetres and degrees), so `.tdraw` files
 keep them without a change to the document format. Every change is one
 undo step.
 
-## The page is the hoop
+## The page is the hoop (Hoop panel)
 
 The page's centre is where the needle starts, so a design sews where it
-sits on the page. Picking a hoop in the panel sizes the page to the hoop's
-sewing field; a page of another size is a custom hoop. The panel says
+sits on the page. Picking a hoop in the Hoop panel sizes the page to the hoop's
+sewing field; a page of another size is a custom hoop. Turn Hoop 90° swaps
+the page's width and height. The panel also holds the fabric and the
+thread chart. The panel says
 whether the design fits (with a 0.15 mm allowance), fits only turned a
 quarter turn, or is too large. Center in Hoop moves the selection (or
 every unlocked object) to the middle of the page.
@@ -64,9 +71,24 @@ between runs.
 
 ## Views
 
-The bar switches between Vector and Stitches. In the stitch view the page
-is veiled and every stitch is drawn in its thread colour, the underlay
-fainter; jumps are thin grey lines. The preview is worked out once for each
+The bar's icon buttons switch between Vector (a pen nib), Stitches
+(needle points) and Realistic (a spool); in the stitch views, icon toggles
+show jumps and trims, underlay and the density map, and a play icon opens
+the sew-out player. The tools are buttons with an icon and their name.
+Each icon's tip names it. The Embroidery, Sewing Sequence and Hoop tabs
+and the File menu's machine file rows have icons too.
+
+In both stitch
+views the canvas becomes fabric; Stitches draws every stitch as a line in
+its thread colour (the underlay fainter, jumps thin grey lines), Realistic
+draws each as lit thread: a shadow down and right, the thread body and a
+sheen down its middle, so white and black thread keep their shape.
+
+In every view the page is drawn as the hoop: a frame 12 mm round the
+sewing field, the field's edge dashed blue (red when stitches fall past
+it), a round hoop's corners shaded, and the hoop's name. Stitches past the
+field's edge (by more than 0.15 mm) are drawn in red over the artwork and
+the stitches. The preview is worked out once for each
 state of the drawing, page, fabric and chart, and only mapped to the screen
 each frame.
 
@@ -78,14 +100,22 @@ each frame.
   shape is hidden, not removed. Over 10 mm wide, the status bar warns.
 - Sort by Color: each layer's objects reordered so each thread colour sews
   in one go, colours in the order they first sew.
-- Sewing Sequence: every sewn part in order with its thread, type and
-  stitch count; a click selects the object.
+- Sewing Sequence panel: every sewn part in order, in colour blocks, with
+  its thread, type and stitch count; a click selects the object. Dragging
+  a row by its handle onto another sews it just before (upper half) or
+  after (lower half) that one, by moving its top-level object next to the
+  other's in the stacking order (objects in one group or on different
+  layers are not moved, and the status bar says why). Clicking a swatch
+  (a block's or a row's) opens a colour picker, applied with Apply, and
+  the thread chart's threads, applied with a click: a fill part's fill or
+  an outline part's outline takes the colour, in one undo step.
 
 ## Files
 
-Export Machine File writes Tajima DST and TAP, Brother PES, Janome JEF,
-Melco EXP, Husqvarna Viking VP3, Singer XXX or Barudan U01. Open Machine
-File reads those and Barudan DSB, ZSK DSZ and Husqvarna Viking HUS onto the
+File > Export Machine File writes Tajima DST and TAP, Brother PES, Janome JEF,
+Melco EXP, Husqvarna Viking VP3, Singer XXX or Barudan U01, the format
+taken from the chosen file's extension (the last one used is offered first
+and remembered). File > Open Machine File reads those and Barudan DSB, ZSK DSZ and Husqvarna Viking HUS onto the
 current page, centred: each run of stitches is a manual-stitch path in its
 thread colour, grouped.
 

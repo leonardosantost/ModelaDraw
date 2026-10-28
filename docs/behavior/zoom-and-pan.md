@@ -31,6 +31,13 @@
 - With the Scroll setting: the wheel scrolls vertically; Shift+wheel
   scrolls horizontally; Ctrl+wheel zooms.
 - A trackpad pinch zooms by the gesture's factor with either setting.
+- Two fingers dragged on a touchpad pan the view, up and down and
+  sideways, with either setting and any tool; the glide after them pans
+  too (0.35 s after the last touchpad event). On the desktop a touchpad
+  (or a touch mouse) scrolls in points or in parts of a line, a mouse
+  wheel in whole lines; in the browser both scroll in pixels, so there
+  only a gesture with a sideways part is taken for a touchpad's
+  (`pick_drag_tests::touchpad_fingers_pan_and_pinch_zooms`).
 - On a touch screen two fingers pan the view and a pinch zooms, with any
   tool (the first finger's drag is dropped).
 

@@ -31,8 +31,8 @@ later step to go forward again. Open it from
   step; [[menu.view.zoom_to_fit]] (<kbd>F4</kbd>) shows all objects,
   [[menu.view.zoom_to_page]] (<kbd>Shift+F4</kbd>) the page and
   [[menu.view.zoom_to_selected]] (<kbd>Shift+F2</kbd>) the selection.
-- A trackpad pinch zooms, and on a touch screen two fingers pan and pinch
-  with any tool.
+- On a trackpad, pinch to zoom and drag two fingers to pan, with any tool.
+  On a touch screen two fingers pan and pinch with any tool.
 
 ### The Zoom tool {#zoom-tool}
 

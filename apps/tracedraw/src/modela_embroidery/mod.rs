@@ -8,8 +8,10 @@
 //! in `README.md`.
 
 mod check;
+pub mod icons;
 mod letters;
 pub mod sew;
+mod view;
 
 use std::cell::RefCell;
 use std::sync::Arc;
@@ -18,6 +20,7 @@ use crate::app::App;
 use crate::i18n::{tr, trf};
 use crate::theme::Tokens;
 use egui::{Color32, Painter, Pos2, Stroke as EStroke, Ui};
+use icons::Icon;
 use sew::{DesignSettings, Part, Preview, Slot, Slots};
 use tracedraw_core::geometry::{Affine, Size};
 use tracedraw_core::{Color, Command, Fill, Shape, ShapeId, ShapeKind, Stroke};
@@ -31,8 +34,9 @@ const PLAYER_ID: &str = "modela_embroidery_player";
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 struct Prefs {
-    /// Draw the stitches over the page (the stitch view).
-    stitch_view: bool,
+    /// What the canvas shows: the artwork, the stitches or realistic
+    /// thread ([`view::VECTOR`], [`view::STITCHES`], [`view::REALISTIC`]).
+    view: u8,
     show_jumps: bool,
     show_underlay: bool,
     /// Heat map of thread layers over the stitch view.
@@ -47,7 +51,7 @@ struct Prefs {
 impl Default for Prefs {
     fn default() -> Self {
         Prefs {
-            stitch_view: false,
+            view: view::VECTOR,
             show_jumps: true,
             show_underlay: true,
             density: false,
@@ -166,11 +170,6 @@ fn rgb(c: [u8; 3]) -> Color32 {
     Color32::from_rgb(c[0], c[1], c[2])
 }
 
-fn swatch(ui: &mut Ui, c: [u8; 3]) {
-    let (r, _) = ui.allocate_exact_size(egui::vec2(12.0, 12.0), egui::Sense::hover());
-    ui.painter().rect_filled(r, 2.0, rgb(c));
-}
-
 fn kind_name(k: StitchType) -> String {
     tr(&format!("modela_embroidery.type_{}", k.id()))
 }
@@ -208,102 +207,71 @@ fn density_color(layers: f64) -> Option<Color32> {
     }
 }
 
-/// The stitches over the page, in their thread colours, when the stitch
-/// view is on. Each run of stitches is one line shape, mapped to the screen
-/// each frame; the stitches themselves come from the cache. With the
-/// sew-out player on, only the stitches sewn so far are drawn.
+/// The Embroidery workspace's canvas: the page drawn as the hoop, with the
+/// stitches past its edge in red, in every view; in the stitch views the
+/// fabric, the stitches (as lines or realistic thread), the density map and
+/// the sew-out player's needle; Check Design's rings on top.
 pub fn draw_stitches(app: &App, painter: &Painter) {
     if app.workspace != crate::app::Workspace::Embroidery {
         return;
     }
     let p = prefs(painter.ctx());
+    let pv = preview(app, &p);
+    let v = &app.view;
+    let to_screen = |q: tracedraw_core::geometry::Point| v.to_screen(q);
+    let field = v.rect_to_screen(app.page_rect());
+    let hoop = page_hoop(app);
+    let round = hoop.is_some_and(|h| h.round);
+    if p.view != view::VECTOR {
+        let pl = player(painter.ctx());
+        let realistic = p.view == view::REALISTIC;
+        painter.rect_filled(painter.clip_rect(), 0.0, view::fabric(realistic));
+        let look = view::Look {
+            realistic,
+            show_jumps: p.show_jumps,
+            show_underlay: p.show_underlay,
+            sewn: if pl.on {
+                pl.at.max(0.0) as usize
+            } else {
+                usize::MAX
+            },
+        };
+        let needle = view::stitches(painter, &pv, v.zoom, &look, to_screen);
+        if p.density {
+            draw_density(painter, &pv, &to_screen);
+        }
+        if pl.on {
+            if let Some(q) = needle {
+                painter.circle_stroke(q, 5.0, EStroke::new(1.5, ERROR));
+            }
+        }
+    }
+    let name = hoop.map_or_else(String::new, |h| format!("{} {}", h.brand, h.name));
+    let outside = view::outside_segments(&pv, round);
+    view::hoop(painter, field, v.zoom, round, &name, &outside, to_screen);
     if p.mark_problems {
         draw_problems(app, painter, &p);
     }
-    if !p.stitch_view {
-        return;
-    }
-    let pv = preview(app, &p);
-    let pl = player(painter.ctx());
-    let view = &app.view;
-    // The fabric: a light veil over the artwork so the thread shows.
-    let page = view.rect_to_screen(app.page_rect());
-    painter.rect_filled(
-        page,
-        0.0,
-        Color32::from_rgba_unmultiplied(250, 250, 248, 225),
-    );
-    let width = (sew::THREAD_MM as f32 * view.zoom).clamp(0.6, 4.0);
-    let mut run: Vec<Pos2> = vec![];
-    let mut thread = 0usize;
-    let mut underlay = false;
-    let flush = |run: &mut Vec<Pos2>, thread: usize, underlay: bool| {
-        if run.len() >= 2 {
-            let mut c = pv.threads.get(thread).map_or(Color32::BLACK, |t| rgb(*t));
-            if underlay {
-                c = c.gamma_multiply(0.45);
-            }
-            painter.add(egui::Shape::line(
-                std::mem::take(run),
-                EStroke::new(width, c),
-            ));
-        }
-        run.clear();
-    };
-    let jump = EStroke::new(1.0, Color32::from_rgba_unmultiplied(120, 120, 120, 160));
-    let count = if pl.on {
-        (pl.at.max(0.0) as usize).min(pv.stitches.len())
-    } else {
-        pv.stitches.len()
-    };
-    let mut last: Option<Pos2> = None;
-    for s in &pv.stitches[..count] {
-        let q = view.to_screen(s.p);
-        let hidden = s.underlay && !p.show_underlay;
-        if !s.sew || s.thread != thread || s.underlay != underlay || hidden {
-            flush(&mut run, thread, underlay);
-            if !s.sew && p.show_jumps {
-                if let Some(a) = last {
-                    painter.line_segment([a, q], jump);
-                }
-            }
-            thread = s.thread;
-            underlay = s.underlay;
-            if !hidden {
-                run.push(q);
-            }
-        } else {
-            if run.is_empty() {
-                if let Some(a) = last {
-                    run.push(a);
-                }
-            }
-            run.push(q);
-        }
-        last = Some(q);
-    }
-    flush(&mut run, thread, underlay);
-    // The needle, where the player has got to.
-    if pl.on {
-        if let Some(q) = last {
-            painter.circle_stroke(q, 5.0, EStroke::new(1.5, ERROR));
-        }
-    }
-    if p.density {
-        let m = &pv.density;
-        let cols = m.cols.max(1);
-        for (i, l) in m.layers.iter().enumerate() {
-            let Some(c) = density_color(f64::from(*l)) else {
-                continue;
-            };
-            let (x, y) = (
-                m.x0 + (i % cols) as f64 * m.cell,
-                m.y0 + (i / cols) as f64 * m.cell,
-            );
-            let a = view.to_screen(pv.to_page(x, y));
-            let b = view.to_screen(pv.to_page(x + m.cell, y + m.cell));
-            painter.rect_filled(egui::Rect::from_two_pos(a, b), 0.0, c);
-        }
+}
+
+fn draw_density(
+    painter: &Painter,
+    pv: &Preview,
+    to_screen: &impl Fn(tracedraw_core::geometry::Point) -> Pos2,
+) {
+    let m = &pv.density;
+    let cols = m.cols.max(1);
+    for (i, l) in m.layers.iter().enumerate() {
+        let Some(c) = density_color(f64::from(*l)) else {
+            continue;
+        };
+        let (x, y) = (
+            m.x0 + (i % cols) as f64 * m.cell,
+            m.y0 + (i / cols) as f64 * m.cell,
+        );
+        let a = to_screen(pv.to_page(x, y));
+        let b = to_screen(pv.to_page(x + m.cell, y + m.cell));
+        painter.rect_filled(egui::Rect::from_two_pos(a, b), 0.0, c);
     }
 }
 
@@ -661,8 +629,12 @@ fn page_hoop(app: &App) -> Option<&'static hoops::Hoop> {
         .find(|h| (h.width - s.width).abs() < 0.05 && (h.height - s.height).abs() < 0.05)
 }
 
-fn export_machine(app: &mut App, p: &Prefs) {
-    let format = Format::from_extension(&p.format).unwrap_or(Format::Dst);
+/// File > Export Machine File: the page's design as an embroidery machine
+/// file; the format is the chosen file's extension (the one used last is
+/// offered first, and remembered).
+pub fn export_machine(app: &mut App, ctx: &egui::Context) {
+    let p = prefs(ctx);
+    let last = Format::from_extension(&p.format).unwrap_or(Format::Dst);
     let name = {
         let t = app.doc().title.trim().to_string();
         if t.is_empty() {
@@ -671,17 +643,28 @@ fn export_machine(app: &mut App, p: &Prefs) {
             t
         }
     };
-    let ds = design(p);
-    let label = format.label().to_string();
-    let ext = format.extension();
-    crate::files::Dialog::new()
-        .add_filter(label, &[ext])
-        .set_file_name(format!("{name}.{ext}"))
+    let ds = design(&p);
+    let mut dialog = crate::files::Dialog::new();
+    for f in std::iter::once(last).chain(Format::writable().filter(|f| *f != last)) {
+        dialog = dialog.add_filter(f.label(), &[f.extension()]);
+    }
+    let ctx = ctx.clone();
+    dialog
+        .set_file_name(format!("{name}.{}", last.extension()))
         .save_file(app, move |app, path| {
+            let format = path
+                .extension()
+                .and_then(|e| e.to_str())
+                .and_then(Format::from_extension)
+                .filter(|f| f.can_write())
+                .unwrap_or(last);
             let page = app.page;
             match sew::machine_file(app.doc(), page, &ds, format, &name) {
                 Ok(bytes) => match crate::files::write(&path, &bytes) {
                     Ok(()) => {
+                        let mut p = prefs(&ctx);
+                        p.format = format.extension().to_string();
+                        set_prefs(&ctx, p);
                         app.status = trf(
                             "modela_embroidery.exported",
                             &[("path", &path.display().to_string())],
@@ -696,7 +679,7 @@ fn export_machine(app: &mut App, p: &Prefs) {
 
 /// Open a machine file onto the current page: each run of stitches becomes
 /// a manual-stitch path in its thread's colour.
-fn import_machine(app: &mut App) {
+pub fn import_machine(app: &mut App) {
     let exts: Vec<&str> = [
         "dst", "pes", "jef", "exp", "vp3", "xxx", "u01", "tap", "dsb", "dsz", "hus",
     ]
@@ -868,30 +851,43 @@ pub fn top_bar(app: &mut App, ui: &mut Ui) {
     ui.horizontal(|ui| {
         ui.strong(tr("modela_embroidery.title"));
         ui.separator();
-        ui.selectable_value(
-            &mut p.stitch_view,
-            false,
-            tr("modela_embroidery.view_vector"),
-        )
-        .on_hover_text(tr("modela_embroidery.view_vector_tip"));
-        ui.selectable_value(
-            &mut p.stitch_view,
-            true,
-            tr("modela_embroidery.view_stitches"),
-        )
-        .on_hover_text(tr("modela_embroidery.view_stitches_tip"));
-        if p.stitch_view {
-            ui.checkbox(&mut p.show_jumps, tr("modela_embroidery.jumps"))
-                .on_hover_text(tr("modela_embroidery.jumps_tip"));
-            ui.checkbox(&mut p.show_underlay, tr("modela_embroidery.underlay"))
-                .on_hover_text(tr("modela_embroidery.underlay_tip"));
-            ui.checkbox(&mut p.density, tr("modela_embroidery.density_map"))
-                .on_hover_text(tr("modela_embroidery.density_map_tip"));
-            if ui
-                .selectable_label(pl.on, tr("modela_embroidery.player"))
-                .on_hover_text(tr("modela_embroidery.player_tip"))
-                .clicked()
-            {
+        ui.spacing_mut().item_spacing.x = 2.0;
+        for (v, icon, key) in [
+            (view::VECTOR, Icon::Vector, "view_vector"),
+            (view::STITCHES, Icon::Stitches, "view_stitches"),
+            (view::REALISTIC, Icon::Realistic, "view_realistic"),
+        ] {
+            let tip = format!(
+                "{}\n{}",
+                tr(&format!("modela_embroidery.{key}")),
+                tr(&format!("modela_embroidery.{key}_tip"))
+            );
+            if icons::button(ui, icon, &tip, p.view == v).clicked() {
+                p.view = v;
+            }
+        }
+        if p.view != view::VECTOR {
+            ui.separator();
+            for (on, icon, key) in [
+                (&mut p.show_jumps, Icon::Jumps, "jumps"),
+                (&mut p.show_underlay, Icon::Underlay, "underlay"),
+                (&mut p.density, Icon::Density, "density_map"),
+            ] {
+                let tip = format!(
+                    "{}\n{}",
+                    tr(&format!("modela_embroidery.{key}")),
+                    tr(&format!("modela_embroidery.{key}_tip"))
+                );
+                if icons::button(ui, icon, &tip, *on).clicked() {
+                    *on = !*on;
+                }
+            }
+            let tip = format!(
+                "{}\n{}",
+                tr("modela_embroidery.player"),
+                tr("modela_embroidery.player_tip")
+            );
+            if icons::button(ui, Icon::Play, &tip, pl.on).clicked() {
                 pl.on = !pl.on;
                 pl.playing = pl.on;
                 pl.at = 0.0;
@@ -934,30 +930,18 @@ pub fn top_bar(app: &mut App, ui: &mut Ui) {
 
 /// The sew-out player: play and pause, step, a scrubber and the speed.
 fn player_controls(ui: &mut Ui, pl: &mut Player, total: usize) {
-    let play = if pl.playing { "⏸" } else { "▶" };
-    if ui
-        .button(play)
-        .on_hover_text(tr("modela_embroidery.play_tip"))
-        .clicked()
-    {
+    let play = if pl.playing { Icon::Pause } else { Icon::Play };
+    if icons::button(ui, play, &tr("modela_embroidery.play_tip"), false).clicked() {
         if !pl.playing && pl.at >= total as f64 {
             pl.at = 0.0;
         }
         pl.playing = !pl.playing;
     }
-    if ui
-        .button("⏮")
-        .on_hover_text(tr("modela_embroidery.rewind_tip"))
-        .clicked()
-    {
+    if icons::button(ui, Icon::Rewind, &tr("modela_embroidery.rewind_tip"), false).clicked() {
         pl.at = 0.0;
         pl.playing = false;
     }
-    if ui
-        .button("⏭")
-        .on_hover_text(tr("modela_embroidery.step_tip"))
-        .clicked()
-    {
+    if icons::button(ui, Icon::Step, &tr("modela_embroidery.step_tip"), false).clicked() {
         pl.playing = false;
         pl.at = (pl.at.floor() + 1.0).min(total as f64);
     }
@@ -984,56 +968,56 @@ fn player_controls(ui: &mut Ui, pl: &mut Player, total: usize) {
 
 /// The bar's tools.
 fn tool_buttons(app: &mut App, ui: &mut Ui, p: &Prefs) {
-    if ui
-        .button(tr("modela_embroidery.add_lettering"))
-        .on_hover_text(tr("modela_embroidery.add_lettering_tip"))
-        .clicked()
+    if icons::labeled(
+        ui,
+        Icon::Lettering,
+        &tr("modela_embroidery.add_lettering"),
+        &tr("modela_embroidery.add_lettering_tip"),
+    )
+    .clicked()
     {
         add_lettering(app);
     }
-    if ui
-        .button(tr("modela_embroidery.convert_to_satin"))
-        .on_hover_text(tr("modela_embroidery.convert_to_satin_tip"))
-        .clicked()
+    if icons::labeled(
+        ui,
+        Icon::Satin,
+        &tr("modela_embroidery.convert_to_satin"),
+        &tr("modela_embroidery.convert_to_satin_tip"),
+    )
+    .clicked()
     {
         convert_to_satin(app, medial::Method::Centerline);
     }
-    if ui
-        .button(tr("modela_embroidery.remove_overlaps"))
-        .on_hover_text(tr("modela_embroidery.remove_overlaps_tip"))
-        .clicked()
+    if icons::labeled(
+        ui,
+        Icon::RemoveOverlaps,
+        &tr("modela_embroidery.remove_overlaps"),
+        &tr("modela_embroidery.remove_overlaps_tip"),
+    )
+    .clicked()
     {
         let ids: Vec<ShapeId> = selected_objects(app).iter().map(|s| s.id).collect();
         remove_overlaps(app, &design(p), &ids);
     }
-    if ui
-        .button(tr("modela_embroidery.sort_by_color"))
-        .on_hover_text(tr("modela_embroidery.sort_by_color_tip"))
-        .clicked()
+    if icons::labeled(
+        ui,
+        Icon::SortByColor,
+        &tr("modela_embroidery.sort_by_color"),
+        &tr("modela_embroidery.sort_by_color_tip"),
+    )
+    .clicked()
     {
         sort_by_color(app);
     }
-    if ui
-        .button(tr("modela_embroidery.center_in_hoop"))
-        .on_hover_text(tr("modela_embroidery.center_in_hoop_tip"))
-        .clicked()
+    if icons::labeled(
+        ui,
+        Icon::CenterInHoop,
+        &tr("modela_embroidery.center_in_hoop"),
+        &tr("modela_embroidery.center_in_hoop_tip"),
+    )
+    .clicked()
     {
         center_in_hoop(app);
-    }
-    ui.separator();
-    if ui
-        .button(tr("modela_embroidery.open_machine"))
-        .on_hover_text(tr("modela_embroidery.open_machine_tip"))
-        .clicked()
-    {
-        import_machine(app);
-    }
-    if ui
-        .button(tr("modela_embroidery.export_machine"))
-        .on_hover_text(tr("modela_embroidery.export_machine_tip"))
-        .clicked()
-    {
-        export_machine(app, p);
     }
 }
 
@@ -1256,10 +1240,13 @@ fn lettering_section(app: &mut App, ui: &mut Ui) {
                 _ => None,
             };
             let Some((id, l)) = lettering else {
-                if ui
-                    .button(tr("modela_embroidery.add_lettering"))
-                    .on_hover_text(tr("modela_embroidery.add_lettering_tip"))
-                    .clicked()
+                if icons::labeled(
+                    ui,
+                    Icon::Lettering,
+                    &tr("modela_embroidery.add_lettering"),
+                    &tr("modela_embroidery.add_lettering_tip"),
+                )
+                .clicked()
                 {
                     add_lettering(app);
                 }
@@ -1373,6 +1360,478 @@ fn check_section(app: &mut App, ui: &mut Ui, p: &mut Prefs, ds: &DesignSettings)
         .on_hover_text(tr("modela_embroidery.check_tip"));
 }
 
+/// The top-level object (in its layer) that `id` is or is inside.
+fn top_of(app: &App, id: ShapeId) -> Option<(tracedraw_core::LayerId, ShapeId)> {
+    fn holds(s: &Shape, id: ShapeId) -> bool {
+        s.id == id
+            || matches!(&s.kind, ShapeKind::Group { children } if children.iter().any(|c| holds(c, id)))
+    }
+    app.page_layers()
+        .iter()
+        .find_map(|l| l.shapes.iter().find(|s| holds(s, id)).map(|s| (l.id, s.id)))
+}
+
+/// Sew `moved` just before (or after) `target`, by moving its top-level
+/// object next to the target's in the stacking order.
+fn move_in_sequence(app: &mut App, moved: ShapeId, target: ShapeId, before: bool) {
+    let (Some((la, a)), Some((lb, b))) = (top_of(app, moved), top_of(app, target)) else {
+        return;
+    };
+    if a == b {
+        app.status = tr("modela_embroidery.same_group");
+        return;
+    }
+    if la != lb {
+        app.status = tr("modela_embroidery.other_layer");
+        return;
+    }
+    let _ = app.run_batch_keeping_lines(
+        "Reorder Sequence",
+        &[Command::OrderRelative {
+            shapes: vec![a],
+            reference: b,
+            in_front: !before,
+        }],
+    );
+}
+
+/// Change the sewing colour of `parts`: a fill part's fill, an outline
+/// part's outline (each the other paint when the object has only that).
+fn set_thread_color(app: &mut App, parts: &[(ShapeId, Part)], c: [u8; 3]) {
+    let color = Color::rgb8(c[0], c[1], c[2]);
+    let mut cmds = vec![];
+    for (id, part) in parts {
+        let Some(s) = app.doc().find_shape(*id) else {
+            continue;
+        };
+        let fill = match part {
+            Part::Fill => sew::fill_rgb(s).is_some() || sew::stroke_rgb(s).is_none(),
+            Part::Stroke => sew::stroke_rgb(s).is_none() && sew::fill_rgb(s).is_some(),
+        };
+        if fill {
+            cmds.push(Command::SetFill {
+                shapes: vec![*id],
+                fill: Fill::Solid(color),
+            });
+        } else {
+            let mut st = s
+                .stroke
+                .clone()
+                .unwrap_or_else(|| Stroke::hairline(Color::BLACK));
+            st.color = color;
+            cmds.push(Command::SetStroke {
+                shapes: vec![*id],
+                stroke: Some(st),
+            });
+        }
+    }
+    if !cmds.is_empty() {
+        let _ = app.run_batch_keeping_lines("Thread Color", &cmds);
+    }
+}
+
+/// A thread swatch that opens a colour picker (and the chart's threads);
+/// returns the colour chosen.
+fn color_swatch(
+    ui: &mut Ui,
+    id: egui::Id,
+    c: [u8; 3],
+    chart: Option<&tracedraw_emb_formats::charts::Chart>,
+) -> Option<[u8; 3]> {
+    let (r, resp) = ui.allocate_exact_size(egui::vec2(16.0, 16.0), egui::Sense::click());
+    ui.painter().rect_filled(r, 3.0, rgb(c));
+    ui.painter().rect_stroke(
+        r,
+        3.0,
+        EStroke::new(1.0, Color32::from_gray(120)),
+        egui::StrokeKind::Inside,
+    );
+    let resp = resp.on_hover_text(tr("modela_embroidery.thread_color_tip"));
+    let mut chosen = None;
+    egui::Popup::menu(&resp).id(id).show(|ui| {
+        let draft_id = id.with("draft");
+        let mut draft: Color32 = ui.ctx().data(|d| d.get_temp(draft_id)).unwrap_or(rgb(c));
+        egui::color_picker::color_picker_color32(ui, &mut draft, egui::color_picker::Alpha::Opaque);
+        ui.ctx().data_mut(|d| d.insert_temp(draft_id, draft));
+        if ui
+            .button(tr("modela_embroidery.apply_color"))
+            .on_hover_text(tr("modela_embroidery.apply_color_tip"))
+            .clicked()
+        {
+            chosen = Some([draft.r(), draft.g(), draft.b()]);
+            ui.ctx().data_mut(|d| d.remove::<Color32>(draft_id));
+            ui.close();
+        }
+        if let Some(chart) = chart {
+            ui.separator();
+            ui.label(egui::RichText::new(&chart.name).small().strong());
+            egui::ScrollArea::vertical()
+                .max_height(180.0)
+                .show(ui, |ui| {
+                    ui.horizontal_wrapped(|ui| {
+                        ui.spacing_mut().item_spacing = egui::vec2(2.0, 2.0);
+                        for t in &chart.threads {
+                            let (r, resp) = ui
+                                .allocate_exact_size(egui::vec2(14.0, 14.0), egui::Sense::click());
+                            ui.painter().rect_filled(r, 2.0, rgb(t.rgb));
+                            if resp
+                                .on_hover_text(format!("{} {}", t.code, t.name))
+                                .clicked()
+                            {
+                                chosen = Some(t.rgb);
+                                ui.close();
+                            }
+                        }
+                    });
+                });
+        }
+    });
+    chosen
+}
+
+/// Window > Panels > Sewing Sequence: every part that sews, in order, in
+/// colour blocks. Drag a row onto another to sew it just before or after
+/// it; click a swatch to change that thread's colour.
+pub fn sequence_panel(app: &mut App, ui: &mut Ui) {
+    let ctx = ui.ctx().clone();
+    let p = prefs(&ctx);
+    let ds = design(&p);
+    let pv = preview(app, &p);
+    ui.label(trf(
+        "modela_embroidery.totals",
+        &[
+            ("stitches", &pv.design.stitch_count().to_string()),
+            ("colors", &pv.threads.len().to_string()),
+            ("time", &minutes_text(pv.sew_minutes)),
+        ],
+    ));
+    ui.label(
+        egui::RichText::new(trf(
+            "modela_embroidery.thread_use",
+            &[
+                ("top", &format!("{:.1}", pv.thread_m)),
+                ("bobbin", &format!("{:.1}", pv.bobbin_m)),
+                ("trims", &pv.design.trims().to_string()),
+            ],
+        ))
+        .small()
+        .color(Tokens::text_dim()),
+    );
+    if pv.max_density > tracedraw_emb_plan::review::TOO_DENSE_LAYERS {
+        ui.colored_label(
+            WARN,
+            trf(
+                "modela_embroidery.too_dense",
+                &[("layers", &format!("{:.1}", pv.max_density))],
+            ),
+        );
+    }
+    ui.horizontal(|ui| {
+        if icons::labeled(
+            ui,
+            Icon::SortByColor,
+            &tr("modela_embroidery.sort_by_color"),
+            &tr("modela_embroidery.sort_by_color_tip"),
+        )
+        .clicked()
+        {
+            sort_by_color(app);
+        }
+    });
+    ui.separator();
+    // The colour blocks: runs of parts in one thread.
+    let rows: Vec<&sew::Sewn> = pv
+        .parts
+        .iter()
+        .filter(|o| !o.obj.stitches.is_empty())
+        .collect();
+    let mut blocks: Vec<(sew::Sewn, Vec<usize>)> = vec![];
+    for (i, o) in rows.iter().enumerate() {
+        match blocks.last_mut() {
+            Some((first, members)) if first.obj.thread.rgb == o.obj.thread.rgb => members.push(i),
+            _ => blocks.push(((*o).clone(), vec![i])),
+        }
+    }
+    let mut pick = None;
+    let mut recolor: Option<(Vec<(ShapeId, Part)>, [u8; 3])> = None;
+    let mut drop: Option<(ShapeId, ShapeId, bool)> = None;
+    egui::ScrollArea::vertical()
+        .id_salt("modela_embroidery_sequence")
+        .show(ui, |ui| {
+            for (b, (first, members)) in blocks.iter().enumerate() {
+                let t = &first.obj.thread;
+                let c = t.rgb;
+                ui.horizontal(|ui| {
+                    let parts: Vec<(ShapeId, Part)> = members
+                        .iter()
+                        .map(|i| (rows[*i].id, rows[*i].part))
+                        .collect();
+                    if let Some(n) = color_swatch(
+                        ui,
+                        egui::Id::new(("modela_seq_block", b)),
+                        c,
+                        ds.chart.as_ref(),
+                    ) {
+                        recolor = Some((parts, n));
+                    }
+                    let name = if t.name.is_empty() {
+                        format!("#{:02X}{:02X}{:02X}", c[0], c[1], c[2])
+                    } else {
+                        format!("{} {}", t.code, t.name)
+                    };
+                    let stitches: usize = members.iter().map(|i| rows[*i].obj.stitches.len()).sum();
+                    ui.label(
+                        egui::RichText::new(format!("{}. {name} · {stitches}", b + 1)).strong(),
+                    );
+                });
+                for i in members {
+                    let o = rows[*i];
+                    let selected = app.selection.contains(&o.id);
+                    let name = app
+                        .doc()
+                        .find_shape(o.id)
+                        .and_then(|s| s.name.clone())
+                        .unwrap_or_else(|| kind_name(o.kind));
+                    let part = tr(if o.part == Part::Fill {
+                        "modela_embroidery.fill"
+                    } else {
+                        "modela_embroidery.outline"
+                    });
+                    let auto = if o.auto {
+                        format!(" {}", tr("modela_embroidery.auto"))
+                    } else {
+                        String::new()
+                    };
+                    let text = format!(
+                        "{name} · {part}: {}{auto} · {}",
+                        kind_name(o.kind),
+                        o.obj.stitches.len()
+                    );
+                    let row = ui.horizontal(|ui| {
+                        ui.add_space(8.0);
+                        if let Some(n) = color_swatch(
+                            ui,
+                            egui::Id::new(("modela_seq_row", *i)),
+                            o.obj.thread.rgb,
+                            ds.chart.as_ref(),
+                        ) {
+                            recolor = Some((vec![(o.id, o.part)], n));
+                        }
+                        let handle = ui
+                            .dnd_drag_source(egui::Id::new(("modela_seq_drag", *i)), o.id, |ui| {
+                                ui.label("⠿");
+                            })
+                            .response
+                            .on_hover_text(tr("modela_embroidery.drag_tip"));
+                        let label = ui
+                            .selectable_label(selected, text)
+                            .on_hover_text(tr("modela_embroidery.sequence_row_tip"));
+                        if label.clicked() {
+                            pick = Some(o.id);
+                        }
+                        handle.union(label)
+                    });
+                    let r = row.response.union(row.inner);
+                    let rect = r.rect;
+                    if let Some(from) = r.dnd_hover_payload::<ShapeId>() {
+                        if *from != o.id {
+                            let before = ui
+                                .ctx()
+                                .pointer_hover_pos()
+                                .is_some_and(|q| q.y < rect.center().y);
+                            let y = if before { rect.top() } else { rect.bottom() };
+                            ui.painter().hline(
+                                rect.x_range(),
+                                y,
+                                EStroke::new(2.0, Tokens::ACCENT),
+                            );
+                        }
+                    }
+                    if let Some(from) = r.dnd_release_payload::<ShapeId>() {
+                        if *from != o.id {
+                            let before = ui
+                                .ctx()
+                                .pointer_interact_pos()
+                                .is_some_and(|q| q.y < rect.center().y);
+                            drop = Some((*from, o.id, before));
+                        }
+                    }
+                }
+            }
+            if rows.is_empty() {
+                ui.label(
+                    egui::RichText::new(tr("modela_embroidery.nothing_sews"))
+                        .color(Tokens::text_dim()),
+                );
+            }
+        });
+    if let Some(id) = pick {
+        app.select(vec![id]);
+    }
+    if let Some((parts, c)) = recolor {
+        set_thread_color(app, &parts, c);
+    }
+    if let Some((from, to, before)) = drop {
+        move_in_sequence(app, from, to, before);
+    }
+}
+
+/// Window > Panels > Hoop: the hoop the page is, how the design fits it,
+/// the fabric and the thread chart.
+pub fn hoop_panel(app: &mut App, ui: &mut Ui) {
+    let ctx = ui.ctx().clone();
+    let mut p = prefs(&ctx);
+    let before = p.clone();
+    let ds = design(&p);
+    let pv = preview(app, &p);
+    let current = page_hoop(app);
+    let text = current.map_or_else(
+        || {
+            let s = app.page_size();
+            trf(
+                "modela_embroidery.custom_hoop",
+                &[
+                    ("w", &format!("{:.0}", s.width)),
+                    ("h", &format!("{:.0}", s.height)),
+                ],
+            )
+        },
+        |h| format!("{} {}", h.brand, h.name),
+    );
+    let mut picked = None;
+    ui.label(tr("modela_embroidery.hoop"));
+    egui::ComboBox::from_id_salt("modela_embroidery_hoop")
+        .selected_text(text)
+        .width(ui.available_width().min(260.0))
+        .show_ui(ui, |ui| {
+            for brand in hoops::brands() {
+                ui.label(egui::RichText::new(brand).small().strong());
+                for h in hoops::HOOPS.iter().filter(|h| h.brand == brand) {
+                    let on = current.is_some_and(|c| c.id == h.id);
+                    let label = if h.round {
+                        format!("{} (⌀ {:.0} mm)", h.name, h.width)
+                    } else {
+                        format!("{} ({:.0} x {:.0} mm)", h.name, h.width, h.height)
+                    };
+                    if ui.selectable_label(on, label).clicked() {
+                        picked = Some(h);
+                    }
+                }
+            }
+        })
+        .response
+        .on_hover_text(tr("modela_embroidery.hoop_tip"));
+    if let Some(h) = picked {
+        set_hoop(app, h);
+    }
+    if current.is_some_and(|h| (h.width - h.height).abs() > 0.05)
+        && icons::labeled(
+            ui,
+            Icon::TurnHoop,
+            &tr("modela_embroidery.turn_hoop"),
+            &tr("modela_embroidery.turn_hoop_tip"),
+        )
+        .clicked()
+    {
+        let s = app.page_size();
+        app.run(Command::ResizePage {
+            page: app.page,
+            size: Size::new(s.height, s.width),
+        });
+    }
+    if let Some(b) = pv.design.bounds() {
+        let s = app.page_size();
+        let fit = hoops::fit(
+            b.width(),
+            b.height(),
+            s.width,
+            s.height,
+            current.is_some_and(|h| h.round),
+        );
+        let (key, color) = match fit {
+            hoops::Fit::Fits => ("modela_embroidery.fits", Tokens::text_dim()),
+            hoops::Fit::Rotated => ("modela_embroidery.fits_rotated", WARN),
+            hoops::Fit::TooLarge { .. } => ("modela_embroidery.too_large", ERROR),
+        };
+        ui.colored_label(
+            color,
+            trf(
+                key,
+                &[
+                    ("w", &format!("{:.1}", b.width())),
+                    ("h", &format!("{:.1}", b.height())),
+                ],
+            ),
+        );
+        let round = current.is_some_and(|h| h.round);
+        if !view::outside_segments(&pv, round).is_empty() {
+            ui.colored_label(ERROR, tr("modela_embroidery.outside_note"));
+            if icons::labeled(
+                ui,
+                Icon::CenterInHoop,
+                &tr("modela_embroidery.center_in_hoop"),
+                &tr("modela_embroidery.center_in_hoop_tip"),
+            )
+            .clicked()
+            {
+                center_in_hoop(app);
+            }
+        }
+    }
+    ui.separator();
+    ui.label(tr("modela_embroidery.fabric"));
+    egui::ComboBox::from_id_salt("modela_embroidery_fabric")
+        .selected_text(tr(&format!("modela_embroidery.fabric_{}", ds.fabric.id)))
+        .show_ui(ui, |ui| {
+            for f in FABRICS.iter() {
+                ui.selectable_value(
+                    &mut p.fabric,
+                    f.id.to_string(),
+                    tr(&format!("modela_embroidery.fabric_{}", f.id)),
+                );
+            }
+        })
+        .response
+        .on_hover_text(tr("modela_embroidery.fabric_tip"));
+    ui.label(tr("modela_embroidery.chart"));
+    let chart_name = |id: &str| {
+        tracedraw_emb_formats::charts::BUILT_IN
+            .iter()
+            .find(|(i, _)| *i == id)
+            .map_or_else(
+                || tr("modela_embroidery.no_chart_name"),
+                |(_, n)| n.to_string(),
+            )
+    };
+    egui::ComboBox::from_id_salt("modela_embroidery_chart")
+        .selected_text(chart_name(&p.chart))
+        .show_ui(ui, |ui| {
+            ui.selectable_value(
+                &mut p.chart,
+                "none".into(),
+                tr("modela_embroidery.no_chart_name"),
+            );
+            for (id, name) in tracedraw_emb_formats::charts::BUILT_IN {
+                ui.selectable_value(&mut p.chart, id.to_string(), name);
+            }
+        })
+        .response
+        .on_hover_text(tr("modela_embroidery.chart_tip"));
+    if icons::labeled(
+        ui,
+        Icon::MatchThreads,
+        &tr("modela_embroidery.match_threads"),
+        &tr("modela_embroidery.match_threads_tip"),
+    )
+    .clicked()
+    {
+        match_threads(app, &ds);
+    }
+    if p != before {
+        set_prefs(&ctx, p);
+    }
+}
+
 /// Window > Panels > Embroidery: the selection's stitches, the sewing
 /// sequence, and the hoop, fabric and threads.
 pub fn panel(app: &mut App, ui: &mut Ui) {
@@ -1380,7 +1839,6 @@ pub fn panel(app: &mut App, ui: &mut Ui) {
     let mut p = prefs(&ctx);
     let before = p.clone();
     let ds = design(&p);
-    let pv = preview(app, &p);
 
     lettering_section(app, ui);
 
@@ -1423,10 +1881,13 @@ pub fn panel(app: &mut App, ui: &mut Ui) {
                         {
                             reset_selection(app);
                         }
-                        if ui
-                            .button(tr("modela_embroidery.convert_to_satin"))
-                            .on_hover_text(tr("modela_embroidery.convert_to_satin_tip"))
-                            .clicked()
+                        if icons::labeled(
+                            ui,
+                            Icon::Satin,
+                            &tr("modela_embroidery.convert_to_satin"),
+                            &tr("modela_embroidery.convert_to_satin_tip"),
+                        )
+                        .clicked()
                         {
                             convert_to_satin(app, medial::Method::Centerline);
                         }
@@ -1437,262 +1898,7 @@ pub fn panel(app: &mut App, ui: &mut Ui) {
         .header_response
         .on_hover_text(tr("modela_embroidery.stitches_tip"));
 
-    egui::CollapsingHeader::new(tr("modela_embroidery.sequence"))
-        .default_open(true)
-        .show(ui, |ui| {
-            ui.label(trf(
-                "modela_embroidery.totals",
-                &[
-                    ("stitches", &pv.design.stitch_count().to_string()),
-                    ("colors", &pv.threads.len().to_string()),
-                    ("time", &minutes_text(pv.sew_minutes)),
-                ],
-            ));
-            ui.label(
-                egui::RichText::new(trf(
-                    "modela_embroidery.thread_use",
-                    &[
-                        ("top", &format!("{:.1}", pv.thread_m)),
-                        ("bobbin", &format!("{:.1}", pv.bobbin_m)),
-                        ("trims", &pv.design.trims().to_string()),
-                    ],
-                ))
-                .small()
-                .color(Tokens::text_dim()),
-            );
-            if pv.max_density > tracedraw_emb_plan::review::TOO_DENSE_LAYERS {
-                ui.colored_label(
-                    Color32::from_rgb(200, 120, 0),
-                    trf(
-                        "modela_embroidery.too_dense",
-                        &[("layers", &format!("{:.1}", pv.max_density))],
-                    ),
-                );
-            }
-            let mut pick = None;
-            egui::ScrollArea::vertical()
-                .max_height(260.0)
-                .id_salt("modela_embroidery_sequence")
-                .show(ui, |ui| {
-                    let mut last: Option<[u8; 3]> = None;
-                    for (i, o) in pv.parts.iter().enumerate() {
-                        if o.obj.stitches.is_empty() {
-                            continue;
-                        }
-                        let c = o.obj.thread.rgb;
-                        if last != Some(c) {
-                            ui.horizontal(|ui| {
-                                swatch(ui, c);
-                                let name = if o.obj.thread.name.is_empty() {
-                                    format!("#{:02X}{:02X}{:02X}", c[0], c[1], c[2])
-                                } else {
-                                    format!("{} {}", o.obj.thread.code, o.obj.thread.name)
-                                };
-                                ui.label(egui::RichText::new(name).small().strong());
-                            });
-                            last = Some(c);
-                        }
-                        let selected = app.selection.contains(&o.id);
-                        let name = app
-                            .doc()
-                            .find_shape(o.id)
-                            .and_then(|s| s.name.clone())
-                            .unwrap_or_else(|| kind_name(o.kind));
-                        let part = tr(if o.part == Part::Fill {
-                            "modela_embroidery.fill"
-                        } else {
-                            "modela_embroidery.outline"
-                        });
-                        let auto = if o.auto {
-                            format!(" {}", tr("modela_embroidery.auto"))
-                        } else {
-                            String::new()
-                        };
-                        let text = format!(
-                            "{}. {} · {}: {}{} · {}",
-                            i + 1,
-                            name,
-                            part,
-                            kind_name(o.kind),
-                            auto,
-                            o.obj.stitches.len()
-                        );
-                        if ui
-                            .selectable_label(selected, text)
-                            .on_hover_text(tr("modela_embroidery.sequence_row_tip"))
-                            .clicked()
-                        {
-                            pick = Some(o.id);
-                        }
-                    }
-                });
-            if let Some(id) = pick {
-                app.select(vec![id]);
-            }
-            if ui
-                .button(tr("modela_embroidery.sort_by_color"))
-                .on_hover_text(tr("modela_embroidery.sort_by_color_tip"))
-                .clicked()
-            {
-                sort_by_color(app);
-            }
-        })
-        .header_response
-        .on_hover_text(tr("modela_embroidery.sequence_tip"));
-
     check_section(app, ui, &mut p, &ds);
-
-    egui::CollapsingHeader::new(tr("modela_embroidery.hoop_threads"))
-        .default_open(true)
-        .show(ui, |ui| {
-            let current = page_hoop(app);
-            let text = current.map_or_else(
-                || {
-                    let s = app.page_size();
-                    trf(
-                        "modela_embroidery.custom_hoop",
-                        &[
-                            ("w", &format!("{:.0}", s.width)),
-                            ("h", &format!("{:.0}", s.height)),
-                        ],
-                    )
-                },
-                |h| format!("{} {}", h.brand, h.name),
-            );
-            let mut picked = None;
-            egui::ComboBox::from_label(tr("modela_embroidery.hoop"))
-                .selected_text(text)
-                .width(190.0)
-                .show_ui(ui, |ui| {
-                    for brand in hoops::brands() {
-                        ui.label(egui::RichText::new(brand).small().strong());
-                        for h in hoops::HOOPS.iter().filter(|h| h.brand == brand) {
-                            let on = current.is_some_and(|c| c.id == h.id);
-                            if ui
-                                .selectable_label(
-                                    on,
-                                    format!("{} ({:.0} x {:.0} mm)", h.name, h.width, h.height),
-                                )
-                                .clicked()
-                            {
-                                picked = Some(h);
-                            }
-                        }
-                    }
-                })
-                .response
-                .on_hover_text(tr("modela_embroidery.hoop_tip"));
-            if let Some(h) = picked {
-                set_hoop(app, h);
-            }
-            if let Some(b) = pv.design.bounds() {
-                let s = app.page_size();
-                let fit = hoops::fit(
-                    b.width(),
-                    b.height(),
-                    s.width,
-                    s.height,
-                    current.is_some_and(|h| h.round),
-                );
-                let (key, color) = match fit {
-                    hoops::Fit::Fits => ("modela_embroidery.fits", Tokens::text_dim()),
-                    hoops::Fit::Rotated => (
-                        "modela_embroidery.fits_rotated",
-                        Color32::from_rgb(200, 120, 0),
-                    ),
-                    hoops::Fit::TooLarge { .. } => (
-                        "modela_embroidery.too_large",
-                        Color32::from_rgb(200, 40, 40),
-                    ),
-                };
-                ui.colored_label(
-                    color,
-                    trf(
-                        key,
-                        &[
-                            ("w", &format!("{:.1}", b.width())),
-                            ("h", &format!("{:.1}", b.height())),
-                        ],
-                    ),
-                );
-            }
-
-            egui::ComboBox::from_label(tr("modela_embroidery.fabric"))
-                .selected_text(tr(&format!("modela_embroidery.fabric_{}", ds.fabric.id)))
-                .show_ui(ui, |ui| {
-                    for f in FABRICS.iter() {
-                        ui.selectable_value(
-                            &mut p.fabric,
-                            f.id.to_string(),
-                            tr(&format!("modela_embroidery.fabric_{}", f.id)),
-                        );
-                    }
-                })
-                .response
-                .on_hover_text(tr("modela_embroidery.fabric_tip"));
-            let chart_name = |id: &str| {
-                tracedraw_emb_formats::charts::BUILT_IN
-                    .iter()
-                    .find(|(i, _)| *i == id)
-                    .map_or_else(
-                        || tr("modela_embroidery.no_chart_name"),
-                        |(_, n)| n.to_string(),
-                    )
-            };
-            egui::ComboBox::from_label(tr("modela_embroidery.chart"))
-                .selected_text(chart_name(&p.chart))
-                .show_ui(ui, |ui| {
-                    ui.selectable_value(
-                        &mut p.chart,
-                        "none".into(),
-                        tr("modela_embroidery.no_chart_name"),
-                    );
-                    for (id, name) in tracedraw_emb_formats::charts::BUILT_IN {
-                        ui.selectable_value(&mut p.chart, id.to_string(), name);
-                    }
-                })
-                .response
-                .on_hover_text(tr("modela_embroidery.chart_tip"));
-            if ui
-                .button(tr("modela_embroidery.match_threads"))
-                .on_hover_text(tr("modela_embroidery.match_threads_tip"))
-                .clicked()
-            {
-                match_threads(app, &ds);
-            }
-            ui.separator();
-            egui::ComboBox::from_label(tr("modela_embroidery.format"))
-                .selected_text(
-                    Format::from_extension(&p.format)
-                        .unwrap_or(Format::Dst)
-                        .label(),
-                )
-                .show_ui(ui, |ui| {
-                    for f in Format::writable() {
-                        ui.selectable_value(&mut p.format, f.extension().to_string(), f.label());
-                    }
-                })
-                .response
-                .on_hover_text(tr("modela_embroidery.format_tip"));
-            ui.horizontal(|ui| {
-                if ui
-                    .button(tr("modela_embroidery.export_machine"))
-                    .on_hover_text(tr("modela_embroidery.export_machine_tip"))
-                    .clicked()
-                {
-                    export_machine(app, &p);
-                }
-                if ui
-                    .button(tr("modela_embroidery.open_machine"))
-                    .on_hover_text(tr("modela_embroidery.open_machine_tip"))
-                    .clicked()
-                {
-                    import_machine(app);
-                }
-            });
-        })
-        .header_response
-        .on_hover_text(tr("modela_embroidery.hoop_threads_tip"));
 
     if p != before {
         set_prefs(&ctx, p);
@@ -1898,11 +2104,56 @@ mod tests {
         set_lettering(&mut app, id, &bigger);
         assert_eq!(app.engine.history_labels().0.len(), before + 1);
         let s2 = app.doc().find_shape(id).unwrap().clone();
-        assert_eq!(letters::lettering_of(&s2).map(|l| l.text), Some("AB".into()));
+        assert_eq!(
+            letters::lettering_of(&s2).map(|l| l.text),
+            Some("AB".into())
+        );
         // Where it was put stays.
         assert_eq!(s2.transform, s.transform);
         let w = s2.stroke.as_ref().unwrap().width;
         assert!((w - bigger.column_width()).abs() < 1e-9);
+    }
+
+    #[test]
+    fn dropping_a_row_sews_it_before_another() {
+        let mut app = App::headless();
+        let a = rect(&mut app, Rect::new(10.0, 10.0, 20.0, 20.0), [200, 0, 0]);
+        let b = rect(&mut app, Rect::new(30.0, 10.0, 40.0, 20.0), [0, 200, 0]);
+        let c = rect(&mut app, Rect::new(50.0, 10.0, 60.0, 20.0), [0, 0, 200]);
+        move_in_sequence(&mut app, c, a, true);
+        let order: Vec<ShapeId> = app
+            .page_layers()
+            .iter()
+            .flat_map(|l| l.shapes.iter().map(|s| s.id))
+            .collect();
+        assert_eq!(order, vec![c, a, b]);
+        let pv = preview(&app, &Prefs::default());
+        assert_eq!(pv.parts.first().map(|o| o.id), Some(c));
+        move_in_sequence(&mut app, c, b, false);
+        let order: Vec<ShapeId> = app
+            .page_layers()
+            .iter()
+            .flat_map(|l| l.shapes.iter().map(|s| s.id))
+            .collect();
+        assert_eq!(order, vec![a, b, c]);
+    }
+
+    #[test]
+    fn a_thread_colour_changes_the_paint_it_sews_from() {
+        let mut app = App::headless();
+        let a = rect(&mut app, Rect::new(10.0, 10.0, 20.0, 20.0), [200, 0, 0]);
+        set_thread_color(&mut app, &[(a, Part::Fill)], [1, 2, 3]);
+        let s = app.doc().find_shape(a).unwrap();
+        assert_eq!(sew::fill_rgb(s), Some([1, 2, 3]));
+        // An outline part changes the outline.
+        app.run(Command::SetStroke {
+            shapes: vec![a],
+            stroke: Some(Stroke::hairline(Color::BLACK)),
+        });
+        set_thread_color(&mut app, &[(a, Part::Stroke)], [9, 8, 7]);
+        let s = app.doc().find_shape(a).unwrap();
+        assert_eq!(sew::stroke_rgb(s), Some([9, 8, 7]));
+        assert_eq!(sew::fill_rgb(s), Some([1, 2, 3]));
     }
 
     #[test]
@@ -1921,7 +2172,11 @@ mod tests {
         let mut app = App::headless();
         for i in 0..40 {
             let (x, y) = (10.0 + (i % 8) as f64 * 24.0, 20.0 + (i / 8) as f64 * 24.0);
-            let id = rect(&mut app, Rect::new(x, y, x + 20.0, y + 20.0), [i as u8 * 5, 80, 40]);
+            let id = rect(
+                &mut app,
+                Rect::new(x, y, x + 20.0, y + 20.0),
+                [i as u8 * 5, 80, 40],
+            );
             app.run(Command::SetStroke {
                 shapes: vec![id],
                 stroke: Some(Stroke::hairline(Color::BLACK)),

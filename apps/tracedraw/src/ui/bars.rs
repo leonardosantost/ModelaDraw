@@ -60,6 +60,10 @@ pub enum Bar {
     Zoom,
     Transform,
     TimeTracker,
+    /// The bars of the Embroidery and Pattern Making workspaces, shown
+    /// only in their workspace.
+    Embroidery,
+    Modeling,
 }
 
 impl Bar {
@@ -74,13 +78,15 @@ impl Bar {
 
     /// The toolbars that lie in rows along the top or the bottom, in the
     /// order of their first rows.
-    pub const ROWS: [Bar; 6] = [
+    pub const ROWS: [Bar; 8] = [
         Bar::Standard,
         Bar::Property,
         Bar::Text,
         Bar::Zoom,
         Bar::Transform,
         Bar::TimeTracker,
+        Bar::Embroidery,
+        Bar::Modeling,
     ];
 
     pub fn key(self) -> &'static str {
@@ -94,6 +100,8 @@ impl Bar {
             Bar::Zoom => "menu.window.toolbar_zoom",
             Bar::Transform => "menu.window.toolbar_transform",
             Bar::TimeTracker => "menu.window.toolbar_time_tracker",
+            Bar::Embroidery => "modela_embroidery.title",
+            Bar::Modeling => "modela.modeling",
         }
     }
 
@@ -109,6 +117,8 @@ impl Bar {
             Bar::Zoom => "zoom",
             Bar::Transform => "transform",
             Bar::TimeTracker => "time_tracker",
+            Bar::Embroidery => "modela_embroidery",
+            Bar::Modeling => "modela_modeling",
         }
     }
 
@@ -149,7 +159,9 @@ impl Bar {
             | Bar::Text
             | Bar::Zoom
             | Bar::Transform
-            | Bar::TimeTracker => &[Dock::Top, Dock::Bottom, Dock::Floating],
+            | Bar::TimeTracker
+            | Bar::Embroidery
+            | Bar::Modeling => &[Dock::Top, Dock::Bottom, Dock::Floating],
             Bar::Status => &[Dock::Top, Dock::Bottom],
         }
     }
@@ -164,7 +176,9 @@ impl Bar {
             | Bar::Text
             | Bar::Zoom
             | Bar::Transform
-            | Bar::TimeTracker => Dock::Top,
+            | Bar::TimeTracker
+            | Bar::Embroidery
+            | Bar::Modeling => Dock::Top,
         }
     }
 
@@ -179,6 +193,13 @@ impl Bar {
             Bar::Zoom => app.show_zoom_toolbar,
             Bar::Transform => app.show_transform_toolbar,
             Bar::TimeTracker => app.settings.time_tracker.show_bar,
+            Bar::Embroidery => {
+                app.workspace == crate::app::Workspace::Embroidery
+                    && !app.settings.bars.hide_embroidery
+            }
+            Bar::Modeling => {
+                app.workspace == crate::app::Workspace::Modeling && !app.settings.bars.hide_modeling
+            }
         }
     }
 
@@ -193,6 +214,8 @@ impl Bar {
             Bar::Zoom => app.show_zoom_toolbar = on,
             Bar::Transform => app.show_transform_toolbar = on,
             Bar::TimeTracker => app.settings.time_tracker.show_bar = on,
+            Bar::Embroidery => app.settings.bars.hide_embroidery = !on,
+            Bar::Modeling => app.settings.bars.hide_modeling = !on,
         }
     }
 
@@ -211,6 +234,8 @@ impl Bar {
             Bar::Zoom => vec2(420.0, 36.0 + TITLE_H + 4.0),
             Bar::Transform => vec2(820.0, 36.0 + TITLE_H + 4.0),
             Bar::TimeTracker => vec2(520.0, 36.0 + TITLE_H + 4.0),
+            Bar::Embroidery => vec2(1000.0, 36.0 + TITLE_H + 4.0),
+            Bar::Modeling => vec2(900.0, 36.0 + TITLE_H + 4.0),
         }
     }
 }
@@ -242,6 +267,12 @@ pub struct BarLayout {
     pub zoom: Dock,
     pub transform: Dock,
     pub time_tracker: Dock,
+    pub embroidery: Dock,
+    pub modeling: Dock,
+    /// The workspace bars closed by the user (the others are shown as
+    /// their workspace is).
+    pub hide_embroidery: bool,
+    pub hide_modeling: bool,
     /// Top-left corners of the other floating toolbars, by [`Bar::id`].
     pub floating_pos: std::collections::BTreeMap<String, [f32; 2]>,
     /// The rows of the toolbars docked along the top or the bottom, by
@@ -274,6 +305,10 @@ impl Default for BarLayout {
             zoom: Dock::Top,
             transform: Dock::Top,
             time_tracker: Dock::Top,
+            embroidery: Dock::Top,
+            modeling: Dock::Top,
+            hide_embroidery: false,
+            hide_modeling: false,
             floating_pos: Default::default(),
             rows: Default::default(),
             locked: false,
@@ -307,6 +342,8 @@ impl BarLayout {
             Bar::Zoom => self.zoom,
             Bar::Transform => self.transform,
             Bar::TimeTracker => self.time_tracker,
+            Bar::Embroidery => self.embroidery,
+            Bar::Modeling => self.modeling,
         };
         if bar.docks().contains(&d) {
             d
@@ -330,6 +367,8 @@ impl BarLayout {
             Bar::Zoom => self.zoom = dock,
             Bar::Transform => self.transform = dock,
             Bar::TimeTracker => self.time_tracker = dock,
+            Bar::Embroidery => self.embroidery = dock,
+            Bar::Modeling => self.modeling = dock,
         }
         true
     }
@@ -904,6 +943,12 @@ fn toolbar_body(app: &mut App, ui: &mut Ui, bar: Bar) -> f32 {
         Bar::Zoom => overflow::row(ui, "zoom", |ui| toolbar::zoom_toolbar(app, ui)),
         Bar::Transform => overflow::row(ui, "transform", |ui| toolbar::transform_toolbar(app, ui)),
         Bar::TimeTracker => overflow::row(ui, "time_tracker", |ui| time_tracker::toolbar(app, ui)),
+        Bar::Embroidery => overflow::row(ui, "modela_embroidery", |ui| {
+            crate::modela_embroidery::top_bar(app, ui)
+        }),
+        Bar::Modeling => overflow::row(ui, "modela_modeling", |ui| {
+            crate::modela_modeling::top_bar(app, ui)
+        }),
         Bar::Toolbox | Bar::Palette | Bar::Status => 0.0,
     }
 }
@@ -1034,6 +1079,8 @@ pub fn floating_bars(app: &mut App, ctx: &egui::Context) {
         Bar::Zoom,
         Bar::Transform,
         Bar::TimeTracker,
+        Bar::Embroidery,
+        Bar::Modeling,
         Bar::Toolbox,
         Bar::Palette,
     ] {
@@ -1163,7 +1210,12 @@ fn floating_body(app: &mut App, ui: &mut Ui, bar: Bar, size: Vec2) {
                     crate::ui::toolbar::property_bar(app, ui);
                 });
         }
-        Bar::Text | Bar::Zoom | Bar::Transform | Bar::TimeTracker => {
+        Bar::Text
+        | Bar::Zoom
+        | Bar::Transform
+        | Bar::TimeTracker
+        | Bar::Embroidery
+        | Bar::Modeling => {
             egui::Frame::new()
                 .inner_margin(egui::Margin::symmetric(4, 2))
                 .show(ui, |ui| {
@@ -1272,6 +1324,39 @@ mod tests {
     }
 
     #[test]
+    fn a_workspace_bar_shows_in_its_workspace_and_moves_like_a_toolbar() {
+        use crate::app::Workspace;
+        let mut app = App::headless();
+        app.set_workspace(Workspace::Embroidery);
+        assert!(Bar::Embroidery.visible(&app));
+        assert!(!Bar::Modeling.visible(&app));
+        // It lies in a row along the top, under the other toolbars.
+        assert!(Bar::Embroidery.in_rows());
+        let top = app.settings.bars.rows_at(Dock::Top);
+        assert_eq!(top.last().map(|r| r[0]), Some(Bar::Modeling));
+        move_bar(
+            &mut app,
+            Bar::Embroidery,
+            Dock::Floating,
+            Some(pos2(200.0, 300.0)),
+        );
+        assert_eq!(app.settings.bars.dock(Bar::Embroidery), Dock::Floating);
+        assert_eq!(app.settings.bars.pos(Bar::Embroidery), pos2(200.0, 300.0));
+        move_bar(&mut app, Bar::Embroidery, Dock::Bottom, None);
+        assert_eq!(app.settings.bars.dock(Bar::Embroidery), Dock::Bottom);
+        // Closed, it stays closed in its workspace until shown again.
+        Bar::Embroidery.set_visible(&mut app, false);
+        assert!(!Bar::Embroidery.visible(&app));
+        app.set_workspace(Workspace::Modeling);
+        assert!(Bar::Modeling.visible(&app) && !Bar::Embroidery.visible(&app));
+        app.set_workspace(Workspace::Embroidery);
+        assert!(!Bar::Embroidery.visible(&app));
+        reset(&mut app);
+        assert!(Bar::Embroidery.visible(&app));
+        assert_eq!(app.settings.bars.dock(Bar::Embroidery), Dock::Top);
+    }
+
+    #[test]
     fn reset_brings_every_bar_back_and_keeps_the_lock() {
         let mut app = App::headless();
         move_bar(
@@ -1325,6 +1410,8 @@ mod tests {
             vec![Zoom],
             vec![Transform],
             vec![TimeTracker],
+            vec![Embroidery],
+            vec![Modeling],
         ];
         assert_eq!(l.rows_at(Dock::Top), first);
         assert!(l.rows_at(Dock::Bottom).is_empty());
@@ -1338,7 +1425,7 @@ mod tests {
             },
         );
         assert_eq!(l.rows_at(Dock::Top)[0], vec![Standard, Property]);
-        assert_eq!(l.rows_at(Dock::Top).len(), 5);
+        assert_eq!(l.rows_at(Dock::Top).len(), first.len() - 1);
         // The Zoom toolbar in front of the standard toolbar.
         l.place_in_row(
             Zoom,

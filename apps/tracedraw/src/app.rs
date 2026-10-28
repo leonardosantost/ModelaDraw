@@ -1698,6 +1698,8 @@ pub enum DockerTab {
     ModelaGrading,
     ModelaNesting,
     ModelaEmbroidery,
+    ModelaSequence,
+    ModelaHoop,
     Transformations,
     Undo,
     AlignDistribute,
@@ -1742,7 +1744,7 @@ pub enum DockerTab {
 }
 
 impl DockerTab {
-    pub const ALL: [DockerTab; 48] = [
+    pub const ALL: [DockerTab; 50] = [
         DockerTab::Properties,
         DockerTab::Objects,
         DockerTab::Hints,
@@ -1750,6 +1752,8 @@ impl DockerTab {
         DockerTab::ModelaGrading,
         DockerTab::ModelaNesting,
         DockerTab::ModelaEmbroidery,
+        DockerTab::ModelaSequence,
+        DockerTab::ModelaHoop,
         DockerTab::Transformations,
         DockerTab::Undo,
         DockerTab::AlignDistribute,
@@ -1804,6 +1808,8 @@ impl DockerTab {
             DockerTab::ModelaGrading,
             DockerTab::ModelaNesting,
             DockerTab::ModelaEmbroidery,
+            DockerTab::ModelaSequence,
+            DockerTab::ModelaHoop,
             DockerTab::Pages,
             DockerTab::Comments,
             DockerTab::ObjectData,
@@ -1871,6 +1877,8 @@ impl DockerTab {
             DockerTab::ModelaGrading => "docker.modela_grading",
             DockerTab::ModelaNesting => "docker.modela_nesting",
             DockerTab::ModelaEmbroidery => "docker.modela_embroidery",
+            DockerTab::ModelaSequence => "docker.modela_sequence",
+            DockerTab::ModelaHoop => "docker.modela_hoop",
             DockerTab::Transformations => "docker.transformations",
             DockerTab::Undo => "docker.undo",
             DockerTab::AlignDistribute => "docker.align_distribute",
@@ -3612,7 +3620,12 @@ impl App {
                 self.show_toolbox = true;
                 self.show_status_bar = true;
                 self.show_dockers = true;
-                self.open_dockers = vec![DockerTab::ModelaEmbroidery, DockerTab::Objects];
+                self.open_dockers = vec![
+                    DockerTab::ModelaEmbroidery,
+                    DockerTab::ModelaSequence,
+                    DockerTab::ModelaHoop,
+                    DockerTab::Objects,
+                ];
                 self.docker_tab = DockerTab::ModelaEmbroidery;
                 self.show_rulers = true;
             }
@@ -7762,7 +7775,12 @@ mod tests {
         assert_eq!(app.docker_tab, DockerTab::ModelaEmbroidery);
         assert_eq!(
             app.open_dockers,
-            [DockerTab::ModelaEmbroidery, DockerTab::Objects]
+            [
+                DockerTab::ModelaEmbroidery,
+                DockerTab::ModelaSequence,
+                DockerTab::ModelaHoop,
+                DockerTab::Objects
+            ]
         );
 
         assert_eq!(Workspace::from_id("modeling"), Workspace::Modeling);

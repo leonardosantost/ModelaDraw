@@ -449,6 +449,27 @@ fn tab_icon(tab: DockerTab) -> Option<TabIcon> {
                 ));
             }
         }),
+        DockerTab::ModelaEmbroidery => Some(|p, r| {
+            crate::modela_embroidery::icons::draw_tab(
+                p,
+                r,
+                crate::modela_embroidery::icons::Icon::Embroidery,
+            );
+        }),
+        DockerTab::ModelaSequence => Some(|p, r| {
+            crate::modela_embroidery::icons::draw_tab(
+                p,
+                r,
+                crate::modela_embroidery::icons::Icon::Sequence,
+            );
+        }),
+        DockerTab::ModelaHoop => Some(|p, r| {
+            crate::modela_embroidery::icons::draw_tab(
+                p,
+                r,
+                crate::modela_embroidery::icons::Icon::Hoop,
+            );
+        }),
         _ => None,
     }
 }

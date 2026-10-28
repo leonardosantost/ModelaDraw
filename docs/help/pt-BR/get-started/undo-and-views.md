@@ -32,8 +32,9 @@ em [[menu.window > menu.window.dockers]].
   [[menu.view.zoom_to_fit]] (<kbd>F4</kbd>) mostra todos os objetos,
   [[menu.view.zoom_to_page]] (<kbd>Shift+F4</kbd>) a página e
   [[menu.view.zoom_to_selected]] (<kbd>Shift+F2</kbd>) a seleção.
-- O gesto de pinça no trackpad muda o zoom, e numa tela sensível ao toque dois
-  dedos deslocam e ampliam com qualquer ferramenta.
+- No trackpad, o gesto de pinça muda o zoom e arrastar dois dedos desloca a
+  vista, com qualquer ferramenta. Numa tela sensível ao toque dois dedos
+  deslocam e ampliam com qualquer ferramenta.
 
 ### A ferramenta Zoom {#zoom-tool}
 

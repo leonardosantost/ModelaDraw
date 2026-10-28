@@ -6,8 +6,11 @@ interface's look. The selector at the right of the menu bar and Window >
 Workspace pick a built-in one (Design (Default), Modeling, Embroidery, Lite,
 Classic, Illustration, Page Layout, Touch); the user's own setup can be kept
 in a file and brought back. Modeling opens the Modela Nesting panel;
-Embroidery opens the Embroidery and Objects panels and the embroidery bar
-(see `modela-embroidery.md`).
+Embroidery opens the Embroidery, Sewing Sequence, Hoop and Objects panels
+and the embroidery bar (see `modela-embroidery.md`). Each of the two
+workspaces' bars shows only in its workspace and docks or floats like the
+other toolbars; where it is and whether it was closed are kept with the bar
+layout.
 
 ## Touch
 
