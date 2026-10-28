@@ -7,8 +7,14 @@
 //! Fonts unpacks it into the user's font folder (`embroidery-fonts` in the
 //! preferences folder), in the background, and the font list reads it
 //! again. The browser build has no font folder.
+//!
+//! Reading the library and loading a font both take long (seconds for a
+//! big font), so neither happens while a frame is drawn: the font list is
+//! read once in the background and kept as names only, and a font is
+//! loaded in the background when it is first chosen.
 
-use std::sync::Mutex;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 use tracedraw_emb_fonts::library;
 
 /// Where the font library is published.
@@ -48,9 +54,125 @@ pub fn can_download() -> bool {
     cfg!(not(target_arch = "wasm32")) && library::user_folder().is_some()
 }
 
-/// The fonts the library has, in name order.
-pub fn installed() -> Vec<library::Entry> {
-    library::entries()
+/// One font of the list: what the font picker shows.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Item {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+}
+
+/// The font list: not read yet, being read, or read.
+enum List {
+    Unread,
+    Reading,
+    Read(Arc<Vec<Item>>),
+}
+
+static LIST: Mutex<List> = Mutex::new(List::Unread);
+
+/// The library's fonts in name order, read in the background the first
+/// time it is asked for (`None` until then); `ctx` repaints once it is.
+pub fn installed(ctx: &egui::Context) -> Option<Arc<Vec<Item>>> {
+    let Ok(mut list) = LIST.lock() else {
+        return None;
+    };
+    match &*list {
+        List::Read(items) => return Some(items.clone()),
+        List::Reading => return None,
+        List::Unread => *list = List::Reading,
+    }
+    drop(list);
+    let read = || {
+        let items: Vec<Item> = library::entries()
+            .into_iter()
+            .map(|e| Item {
+                id: e.id,
+                name: e.info.name,
+                description: e.info.description,
+            })
+            .collect();
+        if let Ok(mut list) = LIST.lock() {
+            *list = List::Read(Arc::new(items));
+        }
+    };
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            read();
+            ctx.request_repaint();
+        });
+        None
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = ctx;
+        read();
+        LIST.lock().ok().and_then(|l| match &*l {
+            List::Read(items) => Some(items.clone()),
+            _ => None,
+        })
+    }
+}
+
+/// Read the font list again (after a download).
+fn reread() {
+    library::rescan();
+    if let Ok(mut list) = LIST.lock() {
+        *list = List::Unread;
+    }
+    if let Ok(mut loads) = LOADS.lock() {
+        *loads = None;
+    }
+}
+
+/// Where loading a font is.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Load {
+    Loading,
+    Ready,
+    Failed(String),
+}
+
+static LOADS: Mutex<Option<HashMap<String, Load>>> = Mutex::new(None);
+
+/// Font `id`, loaded in the background the first time it is asked for:
+/// `Ready` once it can lay out lettering (the library keeps it).
+pub fn load(ctx: &egui::Context, id: &str) -> Load {
+    let Ok(mut loads) = LOADS.lock() else {
+        return Load::Failed("the font cache is unavailable".into());
+    };
+    let loads = loads.get_or_insert_with(HashMap::new);
+    if let Some(l) = loads.get(id) {
+        return l.clone();
+    }
+    loads.insert(id.to_string(), Load::Loading);
+    let id = id.to_string();
+    let work = move || {
+        let state = match library::load(&id) {
+            Ok(_) => Load::Ready,
+            Err(e) => Load::Failed(e),
+        };
+        if let Ok(mut loads) = LOADS.lock() {
+            loads.get_or_insert_with(HashMap::new).insert(id, state);
+        }
+    };
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            work();
+            ctx.request_repaint();
+        });
+        Load::Loading
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = ctx;
+        work();
+        Load::Ready
+    }
 }
 
 /// Start downloading the font library (nothing when it is already
@@ -113,7 +235,7 @@ fn run(ctx: &egui::Context) -> Result<usize, String> {
     unpack(&bytes, &part)?;
     let _ = std::fs::remove_dir_all(&folder);
     std::fs::rename(&part, &folder).map_err(|e| e.to_string())?;
-    library::rescan();
+    reread();
     Ok(library::entries().len())
 }
 
@@ -190,5 +312,46 @@ mod tests {
         println!("{n} fonts in {:?}", library::user_folder());
         assert!(n >= 50);
         assert!(library::user_folder().unwrap().join("FONTS.md").is_file());
+    }
+
+    /// How long the font list takes (the installed library): run with
+    /// `--ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn time_the_font_list() {
+        let ctx = egui::Context::default();
+        let t = web_time::Instant::now();
+        while installed(&ctx).is_none() {
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        let scan = t.elapsed();
+        let t = web_time::Instant::now();
+        let mut n = 0;
+        for _ in 0..1000 {
+            n = installed(&ctx).map_or(0, |l| l.len());
+        }
+        println!(
+            "{n} fonts: read in {scan:?} in the background, then {:?} a call",
+            t.elapsed() / 1000
+        );
+    }
+
+    /// How long each font takes to load: run with `--ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn time_font_loads() {
+        let mut times: Vec<(std::time::Duration, String)> = vec![];
+        for e in library::entries() {
+            let t = web_time::Instant::now();
+            let _ = library::load(&e.id);
+            times.push((t.elapsed(), e.id.clone()));
+        }
+        times.sort();
+        let total: std::time::Duration = times.iter().map(|t| t.0).sum();
+        println!(
+            "{} fonts, {total:?} in all; slowest {:?}",
+            times.len(),
+            &times[times.len().saturating_sub(5)..]
+        );
     }
 }

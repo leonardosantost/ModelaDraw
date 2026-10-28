@@ -72,6 +72,16 @@ codegen-units = 1
 [profile.dev.package."*"]
 opt-level = 2
 
+# The embroidery crates are workspace members, so the line above leaves them
+# unoptimized: a stitch preview or a digitized font took seconds to minutes
+# in a debug build.
+[profile.dev.package.tracedraw-emb-stitch]
+opt-level = 2
+[profile.dev.package.tracedraw-emb-plan]
+opt-level = 2
+[profile.dev.package.tracedraw-emb-fonts]
+opt-level = 2
+
 # eframe 0.36.2 with the OpenGL context fallback of eframe 0.37 (an
 # OpenGL 2.1 driver gets a compatibility context, #616); see
 # vendor/README.md. Drop it when moving to egui 0.37 or later.

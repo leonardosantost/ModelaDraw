@@ -205,6 +205,18 @@ lettering starts in the last font chosen, with a sample the font can sew
 (the sample in capitals, or letters the font has). The browser version has
 the built-in font only.
 
+Neither reading the library nor loading a font happens while a frame is
+drawn: the font list is read once in the background (a spinner shows in
+the list meanwhile) and kept as names, and a digitized font loads in the
+background the first time it is chosen ("Loading the font..." shows in the
+Lettering section); the new or edited lettering is made once it has
+loaded, and the font is kept for the rest of the session.
+
+In the Sewing Sequence panel, the pieces of a digitized lettering sewn one
+after another are one row (its name, how many pieces and their stitches):
+a click selects the lettering, dragging it moves the whole lettering, and
+its swatch recolours every piece.
+
 ## Check Design
 
 The Check Design section lists what will sew badly, errors first, and

@@ -868,8 +868,9 @@ fn add_lettering(app: &mut App, font: &str) {
         text: tr("modela_embroidery.lettering_sample"),
         ..Default::default()
     };
-    // The last font chosen, while the library still has it.
-    if letters::is_builtin(font) || tracedraw_emb_fonts::library::has(font) {
+    // The last font chosen, while the library still has it (loaded by
+    // then: see `request_lettering`).
+    if letters::is_builtin(font) || tracedraw_emb_fonts::library::load(font).is_ok() {
         l.font = font.to_string();
         l.text = letters::sample_text(font, &l.text);
     }
@@ -900,6 +901,90 @@ fn add_lettering(app: &mut App, font: &str) {
         .is_ok()
     {
         app.select(vec![id]);
+    }
+}
+
+/// Lettering waiting for its font to load: a new one, or new settings for
+/// lettering object `ShapeId`.
+#[derive(Clone, Debug)]
+enum Pending {
+    Add(String),
+    Edit(ShapeId, tracedraw_emb_stitch::lettering::Lettering),
+}
+
+const PENDING_ID: &str = "modela_embroidery_pending_lettering";
+
+fn pending(ctx: &egui::Context) -> Option<Pending> {
+    ctx.data(|d| d.get_temp::<Pending>(egui::Id::new(PENDING_ID)))
+}
+
+fn set_pending(ctx: &egui::Context, p: Option<Pending>) {
+    ctx.data_mut(|d| match p {
+        Some(p) => {
+            d.insert_temp(egui::Id::new(PENDING_ID), p);
+        }
+        None => d.remove::<Pending>(egui::Id::new(PENDING_ID)),
+    });
+}
+
+/// The font a pending lettering waits for.
+fn pending_font(p: &Pending) -> &str {
+    match p {
+        Pending::Add(f) => f,
+        Pending::Edit(_, l) => &l.font,
+    }
+}
+
+/// Run `p` once its font is loaded: now when it is (or is the built-in
+/// one), else when it is, kept as pending meanwhile. False when the font
+/// could not load (the status bar says why).
+fn run_when_loaded(app: &mut App, ctx: &egui::Context, p: Pending) -> bool {
+    let font = pending_font(&p).to_string();
+    let state = if letters::is_builtin(&font) {
+        fonts::Load::Ready
+    } else {
+        fonts::load(ctx, &font)
+    };
+    match state {
+        fonts::Load::Ready => {
+            set_pending(ctx, None);
+            match p {
+                Pending::Add(f) => add_lettering(app, &f),
+                Pending::Edit(id, l) => set_lettering(app, id, &l),
+            }
+            true
+        }
+        fonts::Load::Loading => {
+            set_pending(ctx, Some(p));
+            true
+        }
+        fonts::Load::Failed(e) => {
+            set_pending(ctx, None);
+            app.status = trf("modela_embroidery.font_failed", &[("error", &e)]);
+            false
+        }
+    }
+}
+
+/// New lettering in `font`, once the font is loaded.
+fn request_lettering(app: &mut App, ctx: &egui::Context, font: &str) {
+    run_when_loaded(app, ctx, Pending::Add(font.to_string()));
+}
+
+/// Lettering object `id` laid out again with `l`, once its font is loaded.
+fn request_edit(
+    app: &mut App,
+    ctx: &egui::Context,
+    id: ShapeId,
+    l: tracedraw_emb_stitch::lettering::Lettering,
+) {
+    run_when_loaded(app, ctx, Pending::Edit(id, l));
+}
+
+/// The lettering waiting for its font, run once the font has loaded.
+fn poll_pending(app: &mut App, ctx: &egui::Context) {
+    if let Some(p) = pending(ctx) {
+        run_when_loaded(app, ctx, p);
     }
 }
 
@@ -1301,6 +1386,7 @@ fn draw_handles(app: &App, painter: &Painter, pv: &Preview) {
 /// The embroidery bar across the top of the Embroidery workspace.
 pub fn top_bar(app: &mut App, ui: &mut Ui) {
     let ctx = ui.ctx().clone();
+    poll_pending(app, &ctx);
     let mut p = prefs(&ctx);
     let before = p.clone();
     let mut pl = player(&ctx);
@@ -1434,7 +1520,7 @@ fn tool_buttons(app: &mut App, ui: &mut Ui, p: &Prefs) {
     )
     .clicked()
     {
-        add_lettering(app, &p.lettering_font);
+        request_lettering(app, ui.ctx(), &p.lettering_font);
     }
     if icons::labeled(
         ui,
@@ -1691,7 +1777,9 @@ struct TextDraft {
 /// The font a lettering uses: the built-in font or one of the library's,
 /// as a list to choose from. Returns the font chosen.
 fn font_combo(ui: &mut Ui, current: &str) -> Option<String> {
-    let installed = fonts::installed();
+    let list = fonts::installed(ui.ctx());
+    let reading = list.is_none();
+    let installed: &[fonts::Item] = list.as_deref().map_or(&[], |l| l.as_slice());
     let name = |id: &str| {
         tracedraw_emb_stitch::lettering::FONTS
             .iter()
@@ -1701,7 +1789,7 @@ fn font_combo(ui: &mut Ui, current: &str) -> Option<String> {
                 installed
                     .iter()
                     .find(|e| e.id == id)
-                    .map(|e| e.info.name.clone())
+                    .map(|e| e.name.clone())
             })
             .unwrap_or_else(|| id.to_string())
     };
@@ -1716,15 +1804,20 @@ fn font_combo(ui: &mut Ui, current: &str) -> Option<String> {
                     chosen = Some(f.0.to_string());
                 }
             }
-            if !installed.is_empty() {
+            if reading {
+                ui.horizontal(|ui| {
+                    ui.spinner();
+                    ui.label(tr("modela_embroidery.fonts_reading"));
+                });
+            } else if !installed.is_empty() {
                 ui.separator();
             }
-            for e in &installed {
-                let r = ui.selectable_label(current == e.id, &e.info.name);
-                let r = if e.info.description.is_empty() {
+            for e in installed {
+                let r = ui.selectable_label(current == e.id, &e.name);
+                let r = if e.description.is_empty() {
                     r
                 } else {
-                    r.on_hover_text(&e.info.description)
+                    r.on_hover_text(&e.description)
                 };
                 if r.clicked() {
                     chosen = Some(e.id.clone());
@@ -1771,7 +1864,7 @@ fn fonts_download(ui: &mut Ui) {
         }
         fonts::Download::Idle => {}
     }
-    let key = if fonts::installed().is_empty() {
+    let key = if fonts::installed(ui.ctx()).is_none_or(|l| l.is_empty()) {
         "modela_embroidery.fonts_download"
     } else {
         "modela_embroidery.fonts_update"
@@ -1788,10 +1881,26 @@ fn fonts_download(ui: &mut Ui) {
     }
 }
 
+/// While lettering waits for its font: which one, with a spinner.
+fn pending_note(ui: &mut Ui) {
+    if let Some(p) = pending(ui.ctx()) {
+        let font = pending_font(&p).to_string();
+        let name = fonts::installed(ui.ctx())
+            .and_then(|l| l.iter().find(|i| i.id == font).map(|i| i.name.clone()))
+            .unwrap_or(font);
+        ui.horizontal(|ui| {
+            ui.spinner();
+            ui.label(trf("modela_embroidery.font_loading", &[("font", &name)]));
+        });
+    }
+}
+
 fn lettering_section(app: &mut App, ui: &mut Ui, p: &mut Prefs) {
+    poll_pending(app, ui.ctx());
     egui::CollapsingHeader::new(tr("modela_embroidery.lettering"))
         .default_open(true)
         .show(ui, |ui| {
+            pending_note(ui);
             let sel = app.selected_shapes();
             let lettering = match sel.as_slice() {
                 [s] => letters::lettering_of(s).map(|l| (s.id, l)),
@@ -1813,7 +1922,7 @@ fn lettering_section(app: &mut App, ui: &mut Ui, p: &mut Prefs) {
                 )
                 .clicked()
                 {
-                    add_lettering(app, &p.lettering_font);
+                    request_lettering(app, ui.ctx(), &p.lettering_font);
                 }
                 fonts_download(ui);
                 return;
@@ -1869,7 +1978,7 @@ fn lettering_section(app: &mut App, ui: &mut Ui, p: &mut Prefs) {
                 "×",
             );
             if changed && new != l {
-                set_lettering(app, id, &new);
+                request_edit(app, ui.ctx(), id, new);
             }
             fonts_download(ui);
         })
@@ -2074,6 +2183,73 @@ fn color_swatch(
 /// Window > Panels > Sewing Sequence: every part that sews, in order, in
 /// colour blocks. Drag a row onto another to sew it just before or after
 /// it; click a swatch to change that thread's colour.
+/// The lettering group each piece of digitized lettering belongs to, by
+/// the piece's id.
+fn lettering_owners(app: &App) -> std::collections::HashMap<ShapeId, ShapeId> {
+    fn walk(
+        s: &Shape,
+        owner: Option<ShapeId>,
+        out: &mut std::collections::HashMap<ShapeId, ShapeId>,
+    ) {
+        if let ShapeKind::Group { children } = &s.kind {
+            let owner = owner.or_else(|| letters::lettering_of(s).map(|_| s.id));
+            for c in children {
+                walk(c, owner, out);
+            }
+        } else if let Some(o) = owner {
+            out.insert(s.id, o);
+        }
+    }
+    let mut out = std::collections::HashMap::new();
+    for layer in app.page_layers() {
+        for s in &layer.shapes {
+            walk(s, None, &mut out);
+        }
+    }
+    out
+}
+
+/// One row of the sewing sequence: one object's part, or the pieces of a
+/// lettering sewn one after another, as one row.
+struct SequenceLine {
+    /// The object (or the lettering group) the row selects and moves.
+    id: ShapeId,
+    /// Indices into the sequence's parts.
+    parts: Vec<usize>,
+    lettering: bool,
+}
+
+/// The rows of colour block `members`: a run of pieces of one lettering
+/// joined into one row.
+fn sequence_lines(
+    members: &[usize],
+    rows: &[&sew::Sewn],
+    owners: &std::collections::HashMap<ShapeId, ShapeId>,
+) -> Vec<SequenceLine> {
+    let mut out: Vec<SequenceLine> = vec![];
+    for &i in members {
+        let Some(o) = rows.get(i) else {
+            continue;
+        };
+        match owners.get(&o.id) {
+            Some(g) => match out.last_mut() {
+                Some(last) if last.lettering && last.id == *g => last.parts.push(i),
+                _ => out.push(SequenceLine {
+                    id: *g,
+                    parts: vec![i],
+                    lettering: true,
+                }),
+            },
+            None => out.push(SequenceLine {
+                id: o.id,
+                parts: vec![i],
+                lettering: false,
+            }),
+        }
+    }
+    out
+}
+
 pub fn sequence_panel(app: &mut App, ui: &mut Ui) {
     let ctx = ui.ctx().clone();
     let p = prefs(&ctx);
@@ -2134,6 +2310,7 @@ pub fn sequence_panel(app: &mut App, ui: &mut Ui) {
             _ => blocks.push(((*o).clone(), vec![i])),
         }
     }
+    let owners = lettering_owners(app);
     let mut pick = None;
     let mut recolor: Option<(Vec<(ShapeId, Part)>, [u8; 3])> = None;
     let mut drop: Option<(ShapeId, ShapeId, bool)> = None;
@@ -2166,12 +2343,15 @@ pub fn sequence_panel(app: &mut App, ui: &mut Ui) {
                         egui::RichText::new(format!("{}. {name} · {stitches}", b + 1)).strong(),
                     );
                 });
-                for i in members {
-                    let o = rows[*i];
-                    let selected = app.selection.contains(&o.id);
+                for line in sequence_lines(members, &rows, &owners) {
+                    let Some(&first) = line.parts.first() else {
+                        continue;
+                    };
+                    let o = rows[first];
+                    let selected = app.selection.contains(&line.id);
                     let name = app
                         .doc()
-                        .find_shape(o.id)
+                        .find_shape(line.id)
                         .and_then(|s| s.name.clone())
                         .unwrap_or_else(|| kind_name(o.kind));
                     let part = tr(if o.part == Part::Fill {
@@ -2184,11 +2364,20 @@ pub fn sequence_panel(app: &mut App, ui: &mut Ui) {
                     } else {
                         String::new()
                     };
-                    let text = format!(
-                        "{name} · {part}: {}{auto} · {}",
-                        kind_name(o.kind),
-                        o.obj.stitches.len()
-                    );
+                    let stitches: usize =
+                        line.parts.iter().map(|i| rows[*i].obj.stitches.len()).sum();
+                    let text = if line.lettering {
+                        trf(
+                            "modela_embroidery.lettering_row",
+                            &[
+                                ("name", &name),
+                                ("pieces", &line.parts.len().to_string()),
+                                ("stitches", &stitches.to_string()),
+                            ],
+                        )
+                    } else {
+                        format!("{name} · {part}: {}{auto} · {stitches}", kind_name(o.kind))
+                    };
                     let (rect, row) = ui.allocate_exact_size(
                         egui::vec2(ui.available_width(), 24.0),
                         egui::Sense::click_and_drag(),
@@ -2208,11 +2397,17 @@ pub fn sequence_panel(app: &mut App, ui: &mut Ui) {
                             ui.add_space(8.0);
                             if let Some(n) = color_swatch(
                                 ui,
-                                egui::Id::new(("modela_seq_row", *i)),
+                                egui::Id::new(("modela_seq_row", first)),
                                 o.obj.thread.rgb,
                                 ds.chart.as_ref(),
                             ) {
-                                recolor = Some((vec![(o.id, o.part)], n));
+                                recolor = Some((
+                                    line.parts
+                                        .iter()
+                                        .map(|i| (rows[*i].id, rows[*i].part))
+                                        .collect(),
+                                    n,
+                                ));
                             }
                             ui.label(egui::RichText::new("⠿").color(Tokens::text_dim()));
                             ui.label(egui::RichText::new(text).color(if selected {
@@ -2225,12 +2420,12 @@ pub fn sequence_panel(app: &mut App, ui: &mut Ui) {
                     let row = row
                         .on_hover_and_drag_cursor(egui::CursorIcon::Grab)
                         .on_hover_text(tr("modela_embroidery.sequence_row_tip"));
-                    row.dnd_set_drag_payload(SequenceDrag(o.id));
+                    row.dnd_set_drag_payload(SequenceDrag(line.id));
                     if row.clicked() {
-                        pick = Some(o.id);
+                        pick = Some(line.id);
                     }
                     if let Some(from) = row.dnd_hover_payload::<SequenceDrag>() {
-                        if from.0 != o.id {
+                        if from.0 != line.id {
                             let before = ui
                                 .ctx()
                                 .pointer_latest_pos()
@@ -2244,12 +2439,12 @@ pub fn sequence_panel(app: &mut App, ui: &mut Ui) {
                         }
                     }
                     if let Some(from) = row.dnd_release_payload::<SequenceDrag>() {
-                        if from.0 != o.id {
+                        if from.0 != line.id {
                             let before = ui
                                 .ctx()
                                 .pointer_latest_pos()
                                 .is_some_and(|q| q.y < rect.center().y);
-                            drop = Some((from.0, o.id, before));
+                            drop = Some((from.0, line.id, before));
                         }
                     }
                 }
@@ -3032,6 +3227,50 @@ mod tests {
     }
 
     #[test]
+    fn the_sequence_shows_a_lettering_as_one_row() {
+        let font = test_font();
+        let mut app = App::headless();
+        let plain = rect(&mut app, Rect::new(20.0, 20.0, 40.0, 40.0), [0, 0, 0]);
+        add_lettering(&mut app, font);
+        let group = app.selection[0];
+        let mut l = letters::lettering_of(app.doc().find_shape(group).unwrap()).unwrap();
+        l.text = "HIHI".into();
+        set_lettering(&mut app, group, &l);
+        let pv = preview(&app, &Prefs::default());
+        let rows: Vec<&sew::Sewn> = pv
+            .parts
+            .iter()
+            .filter(|o| !o.obj.stitches.is_empty())
+            .collect();
+        assert!(rows.len() >= 5, "the square and four letters' pieces");
+        let all: Vec<usize> = (0..rows.len()).collect();
+        let lines = sequence_lines(&all, &rows, &lettering_owners(&app));
+        assert_eq!(lines.len(), 2, "the square, then the lettering");
+        assert_eq!((lines[0].id, lines[0].lettering), (plain, false));
+        assert_eq!((lines[1].id, lines[1].lettering), (group, true));
+        assert_eq!(lines[1].parts.len(), rows.len() - 1);
+    }
+
+    #[test]
+    fn a_digitized_font_loads_in_the_background_before_the_lettering_is_made() {
+        let font = test_font();
+        let mut app = App::headless();
+        let ctx = egui::Context::default();
+        request_lettering(&mut app, &ctx, font);
+        // Made now, or once the font has loaded.
+        for _ in 0..400 {
+            poll_pending(&mut app, &ctx);
+            if pending(&ctx).is_none() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        assert!(pending(&ctx).is_none());
+        let s = app.doc().find_shape(app.selection[0]).unwrap();
+        assert!(matches!(s.kind, ShapeKind::Group { .. }));
+    }
+
+    #[test]
     fn a_font_the_library_lacks_falls_back_to_the_built_in_one() {
         let mut app = App::headless();
         add_lettering(&mut app, "no_such_font");
@@ -3046,8 +3285,14 @@ mod tests {
     fn every_library_font_sews_its_sample() {
         let fabric = DesignSettings::new("woven", "none").fabric;
         let mut bad = vec![];
-        let all = fonts::installed();
-        for e in &all {
+        let ctx = egui::Context::default();
+        let all = loop {
+            if let Some(l) = fonts::installed(&ctx) {
+                break l;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        };
+        for e in all.iter() {
             let mut app = App::headless();
             add_lettering(&mut app, &e.id);
             let ok = app
@@ -3061,7 +3306,7 @@ mod tests {
                     _ => false,
                 });
             if !ok || preview(&app, &Prefs::default()).design.stitch_count() < 20 {
-                bad.push(format!("{} ({}): {}", e.info.name, e.id, app.status));
+                bad.push(format!("{} ({}): {}", e.name, e.id, app.status));
             }
         }
         println!(
