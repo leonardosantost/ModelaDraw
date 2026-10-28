@@ -19,7 +19,7 @@ bitmap selecionado tem o mesmo comando.
 
 ## Opções {#options}
 
-- **[[dialog.bg_colors]]** O TraceDraw aprende as cores do fundo nas bordas da
+- **[[dialog.bg_colors]]** O ModelaDraw aprende as cores do fundo nas bordas da
   imagem (até quatro, então um degradê ou um fundo de dois tons funciona).
   Para escolhê-las você mesmo, clique no conta-gotas e clique no fundo em uma
   prévia; cada clique acrescenta uma cor. Clique em uma amostra de cor para

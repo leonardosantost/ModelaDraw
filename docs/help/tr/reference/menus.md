@@ -400,6 +400,8 @@ soluk görünür. Menüler kendi kısayollarınızı gösterebilir; bkz.
 | [[menu.window.dock_window]] | [The workspace](../get-started/workspace.md#several-drawings) |
 | [[menu.window.workspace]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_default]] | [Workspaces](../customize/workspaces.md) |
+| [[menu.window.workspace_modeling]] | [Workspaces](../customize/workspaces.md) |
+| [[menu.window.workspace_embroidery]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_lite]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_classic]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_illustration]] | [Workspaces](../customize/workspaces.md) |
@@ -432,17 +434,17 @@ soluk görünür. Menüler kendi kısayollarınızı gösterebilir; bkz.
 
 | Komut | Bkz. |
 |---|---|
-| [[menu.help.help_topics]] | [TraceDraw Yardımına hoş geldiniz](../index.md#in-the-app) |
-| [[menu.help.product_help]] | [TraceDraw Yardımına hoş geldiniz](../index.md#in-the-app) |
-| [[menu.help.welcome_screen]] | [TraceDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
-| [[menu.help.video_tutorials]] | [TraceDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
+| [[menu.help.help_topics]] | [ModelaDraw Yardımına hoş geldiniz](../index.md#in-the-app) |
+| [[menu.help.product_help]] | [ModelaDraw Yardımına hoş geldiniz](../index.md#in-the-app) |
+| [[menu.help.welcome_screen]] | [ModelaDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
+| [[menu.help.video_tutorials]] | [ModelaDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
 | [[menu.help.hints]] | [The Hints panel](../get-started/hints.md) |
-| [[menu.help.quick_start_guide]] | [TraceDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
-| [[menu.help.user_guide]] | [TraceDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
+| [[menu.help.quick_start_guide]] | [ModelaDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
+| [[menu.help.user_guide]] | [ModelaDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
 | [[menu.help.whats_new]] | [Yenilikler](../welcome/whats-new.md) |
 | [[menu.help.highlight_whats_new]] | [Yenilikler](../welcome/whats-new.md) |
-| [[menu.help.updates]] | [TraceDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
-| [[menu.help.message_settings]] | [TraceDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
-| [[menu.help.community]] | [TraceDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
-| [[menu.help.support]] | [TraceDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
-| [[menu.help.about]] | [TraceDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
+| [[menu.help.updates]] | [ModelaDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
+| [[menu.help.message_settings]] | [ModelaDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
+| [[menu.help.community]] | [ModelaDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
+| [[menu.help.support]] | [ModelaDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |
+| [[menu.help.about]] | [ModelaDraw hakkında ve güncellemeler](../welcome/about-and-updates.md) |

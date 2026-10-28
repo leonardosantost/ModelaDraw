@@ -122,4 +122,4 @@ direita, <kbd>T</kbd> e <kbd>B</kbd> com o nó de cima ou de baixo, e
 
 A aparência dos nós e das alças é definida na página
 [[options.nodes_and_handles]] das opções; veja
-[Opções do TraceDraw](../customize/options-app.md#nodes-and-handles).
+[Opções do ModelaDraw](../customize/options-app.md#nodes-and-handles).

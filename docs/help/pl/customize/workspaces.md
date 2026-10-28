@@ -11,6 +11,8 @@ Wybierz go w menu [[menu.window > menu.window.workspace]] lub na stronie
 ## Wbudowane obszary robocze {#built-in}
 
 - [[menu.window.workspace_default]]: zwykła konfiguracja.
+- [[menu.window.workspace_modeling]]: pełny układ projektowy z otwartym panelem Modela Nesting.
+- [[menu.window.workspace_embroidery]]: panel Haft (rodzaje ściegów, kolejność szycia, tamborek, tkanina i nici) i pasek haftu.
 - [[menu.window.workspace_lite]]: mniej pasków, na pierwsze uruchomienie.
 - [[menu.window.workspace_classic]], [[menu.window.workspace_illustration]]
   i [[menu.window.workspace_page_layout]]: paski i panele do tych rodzajów
@@ -22,7 +24,7 @@ Wybierz go w menu [[menu.window > menu.window.workspace]] lub na stronie
 
 ## Co jest zachowywane {#kept}
 
-Wszystko, co zmienisz, jest zachowywane po zamknięciu TraceDraw i wraca przy
+Wszystko, co zmienisz, jest zachowywane po zamknięciu ModelaDraw i wraca przy
 następnym uruchomieniu: opcje, położenie każdego paska i to, które paski są
 widoczne, narzędzie widoczne w każdej grupie przybornika, otwarte panele,
 jednostki, przyciąganie, ustawienia przyjmowane przez nowe obiekty i to, co

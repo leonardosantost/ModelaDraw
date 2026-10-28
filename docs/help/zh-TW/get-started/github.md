@@ -1,12 +1,12 @@
 # 將繪圖保存在 GitHub 上
 
-TraceDraw 可以從 GitHub 儲存庫開啟繪圖，並以提交 (commit) 的方式存回，桌面版和瀏覽器版皆可。每次儲存都會成為儲存庫歷程中的一個版本，之後可以再次開啟。這些指令位於 [[menu.file > menu.file.github]]。
+ModelaDraw 可以從 GitHub 儲存庫開啟繪圖，並以提交 (commit) 的方式存回，桌面版和瀏覽器版皆可。每次儲存都會成為儲存庫歷程中的一個版本，之後可以再次開啟。這些指令位於 [[menu.file > menu.file.github]]。
 
 ## 開始之前：權杖 {#token}
 
 公開儲存庫不需要權杖即可開啟。若要開啟私人儲存庫以及進行儲存，請在 GitHub 上建立一個細粒度個人存取權杖 (fine-grained personal access token)，並授予該儲存庫內容的讀取和寫入權限，然後將它貼到 [[github.token]] 欄位中。
 
-TraceDraw 執行期間會保留權杖。勾選 [[github.remember_token]] 可在下次繼續使用；此時權杖會以純文字儲存在您的偏好設定中（在瀏覽器中則儲存在該瀏覽器的儲存空間）。對話方塊也會記住上次使用的儲存庫、分支和路徑。
+ModelaDraw 執行期間會保留權杖。勾選 [[github.remember_token]] 可在下次繼續使用；此時權杖會以純文字儲存在您的偏好設定中（在瀏覽器中則儲存在該瀏覽器的儲存空間）。對話方塊也會記住上次使用的儲存庫、分支和路徑。
 
 ## 從 GitHub 開啟繪圖 {#open}
 

@@ -336,10 +336,10 @@ pub fn start() {
                     // The splash says so and the reason shows under it,
                     // keeping the page's links to the downloads.
                     let text = format!(
-                        "TraceDraw could not start: {e:?}. A browser with WebGL 2 is needed."
+                        "ModelaDraw could not start: {e:?}. A browser with WebGL 2 is needed."
                     );
                     if let Some(status) = document.get_element_by_id("loading-status") {
-                        status.set_inner_html("TraceDraw could not start");
+                        status.set_inner_html("ModelaDraw could not start");
                     }
                     if let Some(bar) = document.get_element_by_id("loading-bar") {
                         bar.set_attribute("fill", "#e0533d").ok();

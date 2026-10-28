@@ -12,6 +12,8 @@ Farbpalette und das Aussehen der Oberfläche. Wählen Sie einen unter
 ## Integrierte Arbeitsbereiche {#built-in}
 
 - [[menu.window.workspace_default]]: die übliche Einrichtung.
+- [[menu.window.workspace_modeling]]: die vollständige Design-Einrichtung mit geöffnetem Bedienfeld Modela Nesting.
+- [[menu.window.workspace_embroidery]]: das Stickerei-Bedienfeld (Stichtypen, Nähreihenfolge, Rahmen, Stoff und Garne) und die Stickereileiste.
 - [[menu.window.workspace_lite]]: weniger Leisten, für den ersten Start.
 - [[menu.window.workspace_classic]], [[menu.window.workspace_illustration]] und
   [[menu.window.workspace_page_layout]]: Leisten und Andockfenster für diese
@@ -23,7 +25,7 @@ Farbpalette und das Aussehen der Oberfläche. Wählen Sie einen unter
 
 ## Was gespeichert wird {#kept}
 
-Alles, was Sie ändern, bleibt erhalten, wenn TraceDraw geschlossen wird, und ist
+Alles, was Sie ändern, bleibt erhalten, wenn ModelaDraw geschlossen wird, und ist
 beim nächsten Start wieder da: die Optionen, wo jede Leiste sitzt und welche
 Leisten angezeigt werden, das Werkzeug, das jede Gruppe der Werkzeugpalette
 zeigt, die geöffneten Andockfenster, Einheiten, Fangen, die Einstellungen für

@@ -145,7 +145,7 @@ pub fn set_export_size(st: &mut ExportState, side_mm: f64, typed: f64) {
 }
 
 /// Where a `.cdr` file that does not open right is sent in.
-pub const CDR_ISSUE: &str = "https://github.com/igtoth/tracedraw/issues/new?template=cdr_file.yml";
+pub const CDR_ISSUE: &str = "https://github.com/leonardosantost/ModelaDraw/issues/new?template=cdr_file.yml";
 
 pub const PDF_STANDARDS: [&str; 4] = ["PDF 1.4", "PDF/X-1a:2003", "PDF/X-3:2003", "PDF/X-4"];
 
@@ -837,7 +837,7 @@ pub enum Dialog {
         text: String,
     },
     DocumentProperties(Box<crate::ui::doc_properties::DocPropsState>),
-    /// Save on a drawing opened from a `.cdr` version TraceDraw does not
+    /// Save on a drawing opened from a `.cdr` version ModelaDraw does not
     /// save in: choose another version first.
     OldCdrVersion {
         version: u16,
@@ -850,7 +850,7 @@ pub enum Dialog {
         style: Option<(bool, bool)>,
         size: Option<f64>,
     },
-    /// Reset every preference to the defaults? (F8 while TraceDraw
+    /// Reset every preference to the defaults? (F8 while ModelaDraw
     /// starts, Options > Global.)
     ConfirmResetSettings,
     /// At start-up: drawings a session that ended without closing left in
@@ -2058,7 +2058,8 @@ pub fn show(app: &mut App, ctx: &Context) {
                 let any = options.iter().any(|(_, _, ok)| *ok);
                 for (v, label, ok) in &options {
                     ui.add_enabled_ui(*ok, |ui| {
-                        ui.radio_value(&mut st.choice, *v, label);
+                        ui.radio_value(&mut st.choice, *v, label)
+                            .on_hover_text(format!("{} {label}", tr("dialog.paste_as")));
                     });
                 }
                 if !any {

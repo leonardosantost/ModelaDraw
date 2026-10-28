@@ -291,7 +291,7 @@ pub fn forward(info: Option<&LinkInfo>, line: &str) -> Option<String> {
         })
     };
     let Some(info) = info else {
-        return error("no TraceDraw window accepts agents: open TraceDraw and turn on Options > Global > General > Let AI agents on this computer edit the open drawing");
+        return error("no ModelaDraw window accepts agents: open ModelaDraw and turn on Options > Global > General > Let AI agents on this computer edit the open drawing");
     };
     let agent: ureq::Agent = ureq::Agent::config_builder()
         .timeout_global(Some(ANSWER_WAIT + Duration::from_secs(5)))
@@ -313,10 +313,10 @@ pub fn forward(info: Option<&LinkInfo>, line: &str) -> Option<String> {
             match status {
                 200 => Some(body),
                 202 => None,
-                _ => error(&format!("the TraceDraw window answered {status}")),
+                _ => error(&format!("the ModelaDraw window answered {status}")),
             }
         }
-        Err(e) => error(&format!("the TraceDraw window cannot be reached: {e}")),
+        Err(e) => error(&format!("the ModelaDraw window cannot be reached: {e}")),
     }
 }
 
@@ -422,7 +422,7 @@ mod tests {
         });
         let init: serde_json::Value =
             serde_json::from_str(&answers.0.expect("an answer")).expect("json");
-        assert_eq!(init["result"]["serverInfo"]["name"], "tracedraw");
+        assert_eq!(init["result"]["serverInfo"]["name"], "modeladraw");
         assert_eq!(answers.1, None, "notifications get no answer");
         let draw: serde_json::Value =
             serde_json::from_str(&answers.2.expect("an answer")).expect("json");

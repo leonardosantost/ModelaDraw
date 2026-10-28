@@ -1,23 +1,23 @@
-# Opcje TraceDraw
+# Opcje ModelaDraw
 
 [[menu.tools > menu.tools.options > menu.tools.options_app]] (<kbd>Ctrl+J</kbd>)
 określa sposób działania programu. Wybierz stronę z listy po lewej stronie.
 
 ## Ogólne {#general}
 
-![Strona Ogólne opcji TraceDraw](../../img/customize-options-app-general.png)
+![Strona Ogólne opcji ModelaDraw](../../img/customize-options-app-general.png)
 
 - [[options.on_startup]]: wyświetl ekran powitalny, utwórz nowy dokument lub
   otwórz ostatnio edytowany dokument.
 - [[options.show_new_document_dialog]] (włączone): pytaj o ustawienia nowego
   rysunku; zobacz [Tworzenie rysunku](../get-started/new-document.md).
 - [[options.show_splash]] (włączone).
-- [[options.hardware_acceleration]] (włączone): okno jest rysowane kartą graficzną wybraną obok (na początku [[options.gpu_automatic]]); wyłączone, programowym rendererem komputera. Działa od następnego uruchomienia. Jeśli okno nie może się tak otworzyć, TraceDraw uruchamia się ponownie z rendererem programowym, potem z OpenGL, i zapamiętuje ten, który zadziałał.
+- [[options.hardware_acceleration]] (włączone): okno jest rysowane kartą graficzną wybraną obok (na początku [[options.gpu_automatic]]); wyłączone, programowym rendererem komputera. Działa od następnego uruchomienia. Jeśli okno nie może się tak otworzyć, ModelaDraw uruchamia się ponownie z rendererem programowym, potem z OpenGL, i zapamiętuje ten, który zadziałał.
 - [[options.undo_levels]]: ile kroków można cofnąć (domyślnie 150).
 
 ## Wyświetlanie {#display}
 
-![Strona Wyświetlanie opcji TraceDraw](../../img/customize-options-app-display.png)
+![Strona Wyświetlanie opcji ModelaDraw](../../img/customize-options-app-display.png)
 
 - [[menu.view.proof_colors]]: pokazuj kolory tak, jak zostaną wydrukowane.
 - [[options.show_tooltips]] (włączone), [[options.hide_bbox_curve_tools]]
@@ -32,7 +32,7 @@ określa sposób działania programu. Wybierz stronę z listy po lewej stronie.
 
 ## Edycja {#edit}
 
-![Strona Edycja opcji TraceDraw](../../img/customize-options-app-edit.png)
+![Strona Edycja opcji ModelaDraw](../../img/customize-options-app-edit.png)
 
 - [[options.constrain_angle]]: krok kąta z <kbd>Ctrl</kbd> podczas obracania
   i rysowania (domyślnie 15 stopni).
@@ -43,7 +43,7 @@ określa sposób działania programu. Wybierz stronę z listy po lewej stronie.
 
 ## Węzły i uchwyty {#nodes-and-handles}
 
-![Strona Węzły i uchwyty opcji TraceDraw](../../img/customize-options-app-nodes-and-handles.png)
+![Strona Węzły i uchwyty opcji ModelaDraw](../../img/customize-options-app-nodes-and-handles.png)
 
 - [[options.node_size]]: mały, średni lub duży.
 - [[options.node_shape]] dla węzłów [[options.node_cusp]],
@@ -56,7 +56,7 @@ określa sposób działania programu. Wybierz stronę z listy po lewej stronie.
 
 ## Ramka przycinania {#clip-frame}
 
-![Strona Ramka przycinania opcji TraceDraw](../../img/customize-options-app-clip-frame.png)
+![Strona Ramka przycinania opcji ModelaDraw](../../img/customize-options-app-clip-frame.png)
 
 - [[options.auto_center]]: [[options.auto_center_outside]] (domyślnie),
   [[options.auto_center_always]] lub [[options.auto_center_never]].
@@ -66,7 +66,7 @@ Zobacz [Umieszczanie obiektów w ramce](../objects/clip-frames.md).
 
 ## Przyciąganie {#snapping}
 
-![Strona Przyciąganie opcji TraceDraw](../../img/customize-options-app-snapping.png)
+![Strona Przyciąganie opcji ModelaDraw](../../img/customize-options-app-snapping.png)
 
 - [[options.snap_to_objects]], [[options.snap_to_page]],
   [[options.snap_to_guidelines]], [[options.snap_to_grid]], siatka linii
@@ -80,7 +80,7 @@ Zobacz [Przyciąganie](../pages-layout/snapping.md).
 
 ## Zapisywanie {#save}
 
-![Strona Zapisywanie opcji TraceDraw](../../img/customize-options-app-save.png)
+![Strona Zapisywanie opcji ModelaDraw](../../img/customize-options-app-save.png)
 
 - [[options.backup]]: [[options.backup_before_save]] (włączone) zachowuje
   poprzedni plik jako `backup_of_<name>`, [[options.backup_to]]
@@ -92,7 +92,7 @@ Zobacz [Przyciąganie](../pages-layout/snapping.md).
 
 ## Tekst {#text}
 
-![Strona Tekst opcji TraceDraw](../../img/customize-options-app-text.png)
+![Strona Tekst opcji ModelaDraw](../../img/customize-options-app-text.png)
 
 Strona ma pięć kart.
 

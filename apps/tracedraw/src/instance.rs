@@ -1,4 +1,4 @@
-//! One window for every start (#646). A start that finds TraceDraw running
+//! One window for every start (#646). A start that finds ModelaDraw running
 //! hands the files it was given to that window, which opens them in tabs of
 //! their own, and ends; started with no file it opens a window of its own,
 //! as `--new-instance` always does.
@@ -513,9 +513,9 @@ mod tests {
     #[test]
     fn the_linux_launcher_starts_once_for_several_files() {
         let desktop = std::fs::read_to_string(
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packaging/linux/tracedraw.desktop"),
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packaging/linux/modeladraw.desktop"),
         )
         .expect("desktop file");
-        assert!(desktop.contains("Exec=tracedraw %F"), "{desktop}");
+        assert!(desktop.contains("Exec=modeladraw %F"), "{desktop}");
     }
 }

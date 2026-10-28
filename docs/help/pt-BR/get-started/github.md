@@ -1,6 +1,6 @@
 # Guardar desenhos no GitHub
 
-O TraceDraw pode abrir desenhos de um repositório do GitHub e salvá-los de
+O ModelaDraw pode abrir desenhos de um repositório do GitHub e salvá-los de
 volta como commits, no computador e no navegador. Cada salvamento vira uma
 versão no histórico do repositório, que você pode abrir de novo depois. Os
 comandos ficam em [[menu.file > menu.file.github]].
@@ -11,7 +11,7 @@ Repositórios públicos abrem sem token. Para abrir os privados e para salvar,
 crie no GitHub um token de acesso pessoal refinado com acesso de leitura e
 escrita ao conteúdo do repositório, e cole-o no campo [[github.token]].
 
-O token fica guardado enquanto o TraceDraw está aberto. Marque
+O token fica guardado enquanto o ModelaDraw está aberto. Marque
 [[github.remember_token]] para mantê-lo para a próxima vez; ele é então
 guardado em texto simples nas suas preferências (no navegador, no
 armazenamento daquele navegador). As caixas de diálogo também lembram o último

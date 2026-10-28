@@ -106,6 +106,7 @@ pub fn panel(app: &mut App, ui: &mut Ui) {
                         .speed(units.from_mm(5.0).max(0.01))
                         .suffix(&suffix),
                 )
+                .on_hover_text(tr("modela_nesting.width_tip"))
                 .changed()
             {
                 state.width_mm = units.to_mm(width);
@@ -121,6 +122,7 @@ pub fn panel(app: &mut App, ui: &mut Ui) {
                         .speed(units.from_mm(1.0).max(0.01))
                         .suffix(&suffix),
                 )
+                .on_hover_text(tr("modela_nesting.spacing_tip"))
                 .changed()
             {
                 state.spacing_mm = units.to_mm(spacing);
@@ -145,6 +147,7 @@ pub fn panel(app: &mut App, ui: &mut Ui) {
     let enabled = selected_count > 0 && !nested;
     if ui
         .add_enabled(enabled, egui::Button::new(tr("modela_nesting.run")))
+        .on_hover_text(tr("modela_nesting.run_tip"))
         .clicked()
     {
         state.feedback = Some(

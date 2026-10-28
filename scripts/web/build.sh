@@ -5,16 +5,16 @@ cd "$(dirname "$0")/../.."
 cargo build --target wasm32-unknown-unknown --profile web -p tracedraw
 rm -rf site && mkdir -p site
 wasm-bindgen --target web --no-typescript --out-dir site \
-    target/wasm32-unknown-unknown/web/tracedraw.wasm
+    target/wasm32-unknown-unknown/web/modeladraw.wasm
 # Shrink the module for download with binaryen's wasm-opt (version 133,
 # as in CI): optimise for size and drop the name, debug and producer
 # sections, which the page does not use.
 wasm-opt -Oz --strip-debug --strip-producers \
-    -o site/tracedraw_bg.wasm site/tracedraw_bg.wasm
+    -o site/modeladraw_bg.wasm site/modeladraw_bg.wasm
 cp web/FONTS.md site/
 # The page with the module's size (the download shows its progress) and
 # the version.
-size=$(wc -c < site/tracedraw_bg.wasm | tr -d ' ')
+size=$(wc -c < site/modeladraw_bg.wasm | tr -d ' ')
 version=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -n 1)
 sed -e "s/data-wasm-size=\"0\"/data-wasm-size=\"$size\"/" -e "s/@VERSION@/$version/" \
     web/index.html > site/index.html

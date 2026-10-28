@@ -145,7 +145,7 @@ pub fn items_from_bytes(bytes: &[u8]) -> Option<Vec<ShelfItem>> {
     }
     if file.version > VERSION {
         log::warn!(
-            "the shelf was written by a newer TraceDraw (version {}); reading what this one knows",
+            "the shelf was written by a newer ModelaDraw (version {}); reading what this one knows",
             file.version
         );
     }

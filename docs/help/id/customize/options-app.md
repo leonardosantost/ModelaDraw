@@ -1,24 +1,24 @@
-# Opsi TraceDraw
+# Opsi ModelaDraw
 
 [[menu.tools > menu.tools.options > menu.tools.options_app]] (<kbd>Ctrl+J</kbd>)
 mengatur cara kerja program. Pilih halaman dari daftar di sebelah kiri.
 
 ## Umum {#general}
 
-![Halaman Umum pada opsi TraceDraw](../../img/customize-options-app-general.png)
+![Halaman Umum pada opsi ModelaDraw](../../img/customize-options-app-general.png)
 
 - [[options.on_startup]]: tampilkan Layar Sambutan, mulai dokumen baru, atau
   buka dokumen yang terakhir disunting.
 - [[options.show_new_document_dialog]] (aktif): menanyakan pengaturan gambar
   baru; lihat [Membuat gambar](../get-started/new-document.md).
 - [[options.show_splash]] (aktif).
-- [[options.hardware_acceleration]] (aktif): jendela digambar dengan kartu grafis yang dipilih di sebelahnya ([[options.gpu_automatic]] pada awalnya); nonaktif, dengan perender perangkat lunak komputer. Berlaku pada mulai berikutnya. Jika jendela tidak bisa terbuka dengan cara itu, TraceDraw mulai lagi dengan perender perangkat lunak, lalu dengan OpenGL, dan mengingat yang berhasil.
+- [[options.hardware_acceleration]] (aktif): jendela digambar dengan kartu grafis yang dipilih di sebelahnya ([[options.gpu_automatic]] pada awalnya); nonaktif, dengan perender perangkat lunak komputer. Berlaku pada mulai berikutnya. Jika jendela tidak bisa terbuka dengan cara itu, ModelaDraw mulai lagi dengan perender perangkat lunak, lalu dengan OpenGL, dan mengingat yang berhasil.
 - [[options.undo_levels]]: berapa langkah yang dapat Anda urungkan (awalnya
   150).
 
 ## Tampilan {#display}
 
-![Halaman Tampilan pada opsi TraceDraw](../../img/customize-options-app-display.png)
+![Halaman Tampilan pada opsi ModelaDraw](../../img/customize-options-app-display.png)
 
 - [[menu.view.proof_colors]]: tampilkan warna seperti saat dicetak.
 - [[options.show_tooltips]] (aktif), [[options.hide_bbox_curve_tools]], dan
@@ -33,7 +33,7 @@ mengatur cara kerja program. Pilih halaman dari daftar di sebelah kiri.
 
 ## Sunting {#edit}
 
-![Halaman Sunting pada opsi TraceDraw](../../img/customize-options-app-edit.png)
+![Halaman Sunting pada opsi ModelaDraw](../../img/customize-options-app-edit.png)
 
 - [[options.constrain_angle]]: kelipatan sudut <kbd>Ctrl</kbd> saat memutar
   dan menggambar (awalnya 15 derajat).
@@ -44,7 +44,7 @@ mengatur cara kerja program. Pilih halaman dari daftar di sebelah kiri.
 
 ## Simpul dan Gagang {#nodes-and-handles}
 
-![Halaman Simpul dan Gagang pada opsi TraceDraw](../../img/customize-options-app-nodes-and-handles.png)
+![Halaman Simpul dan Gagang pada opsi ModelaDraw](../../img/customize-options-app-nodes-and-handles.png)
 
 - [[options.node_size]]: kecil, sedang, atau besar.
 - [[options.node_shape]] untuk simpul [[options.node_cusp]],
@@ -57,7 +57,7 @@ mengatur cara kerja program. Pilih halaman dari daftar di sebelah kiri.
 
 ## Bingkai Potong {#clip-frame}
 
-![Halaman Bingkai Potong pada opsi TraceDraw](../../img/customize-options-app-clip-frame.png)
+![Halaman Bingkai Potong pada opsi ModelaDraw](../../img/customize-options-app-clip-frame.png)
 
 - [[options.auto_center]]: [[options.auto_center_outside]] (bawaan),
   [[options.auto_center_always]], atau [[options.auto_center_never]].
@@ -67,7 +67,7 @@ Lihat [Menempatkan objek di dalam bingkai](../objects/clip-frames.md).
 
 ## Penempelan {#snapping}
 
-![Halaman Penempelan pada opsi TraceDraw](../../img/customize-options-app-snapping.png)
+![Halaman Penempelan pada opsi ModelaDraw](../../img/customize-options-app-snapping.png)
 
 - [[options.snap_to_objects]], [[options.snap_to_page]],
   [[options.snap_to_guidelines]], [[options.snap_to_grid]], kisi garis dasar,
@@ -81,7 +81,7 @@ Lihat [Penempelan](../pages-layout/snapping.md).
 
 ## Simpan {#save}
 
-![Halaman Simpan pada opsi TraceDraw](../../img/customize-options-app-save.png)
+![Halaman Simpan pada opsi ModelaDraw](../../img/customize-options-app-save.png)
 
 - [[options.backup]]: [[options.backup_before_save]] (aktif) menyimpan berkas
   sebelumnya sebagai `backup_of_<name>`, [[options.backup_to]]
@@ -93,7 +93,7 @@ Lihat [Penempelan](../pages-layout/snapping.md).
 
 ## Teks {#text}
 
-![Halaman Teks pada opsi TraceDraw](../../img/customize-options-app-text.png)
+![Halaman Teks pada opsi ModelaDraw](../../img/customize-options-app-text.png)
 
 Halaman ini punya lima tab.
 

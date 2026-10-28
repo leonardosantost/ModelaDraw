@@ -1,6 +1,6 @@
 # Text
 
-TraceDraw has two kinds of text:
+ModelaDraw has two kinds of text:
 
 - **Artistic text**: a line (or a few lines, with **Enter**) placed at a
   point. Good for headlines, labels and logos. New artistic text is
@@ -67,7 +67,7 @@ next text you add.
   the pointer.
 
 `Ctrl+8` and `Ctrl+2` make the selected text larger and smaller by the
-keyboard text increment (1 pt; set in **Tools > Options > TraceDraw >
+keyboard text increment (1 pt; set in **Tools > Options > ModelaDraw >
 Text**).
 
 ### Missing fonts

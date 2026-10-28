@@ -9,7 +9,7 @@ menu.tools.scripts_docker]]).
 
 ## Escrever e executar scripts {#run}
 
-Um script trabalha com os objetos do TraceDraw: `Application`,
+Um script trabalha com os objetos do ModelaDraw: `Application`,
 `ActiveDocument`, `ActivePage`, `ActiveLayer` e as formas, preenchimentos,
 contornos, cores, curvas e efeitos. Por exemplo:
 
@@ -44,16 +44,16 @@ filtros instalados com [[docker.edit]] e [[docker.remove]].
 
 ## Assistentes de IA (MCP) {#mcp}
 
-O TraceDraw fala o Model Context Protocol, então assistentes de IA no seu
+O ModelaDraw fala o Model Context Protocol, então assistentes de IA no seu
 computador podem abrir, editar, inspecionar, exportar e salvar desenhos:
 
-- `tracedraw --mcp` executa o TraceDraw sem janela para um assistente.
+- `tracedraw --mcp` executa o ModelaDraw sem janela para um assistente.
 - Para deixar um assistente editar o desenho aberto na sua janela, ligue
   [[options.mcp_window]] na página [[options.general]] de
   [[menu.tools > menu.tools.options > menu.tools.options_global]], e dê ao
   assistente `tracedraw --mcp-window` como comando. Cada alteração é um passo
   de desfazer que você pode voltar. Só programas no seu computador com o token
-  secreto que o TraceDraw grava podem se conectar.
+  secreto que o ModelaDraw grava podem se conectar.
 
 ## A ferramenta de linha de comando {#cli}
 
@@ -62,4 +62,4 @@ sem abrir o programa, para trabalho em lote.
 
 ## Macros {#macros}
 
-O TraceDraw executa projetos de macros VBA escritos para programas de desenho (versão para desktop). [[menu.tools > menu.tools.macros > menu.tools.macros_load]] adiciona um projeto (`.gms`) ou arquivos de módulo (`.bas`, `.cls`, `.frm`); os projetos ficam guardados e carregam ao iniciar. O [[docker.macros]] lista as macros: clique duas vezes numa delas ou use [[menu.tools > menu.tools.macros > menu.tools.macros_run]] (<kbd>Alt+Shift+F8</kbd>) para executá-la. Formulários, caixas de mensagem e de entrada da macro aparecem na tela, <kbd>Esc</kbd> ou [[menu.tools > menu.tools.macros > menu.tools.macros_stop]] interrompe, e tudo o que uma execução muda é um único passo de desfazer. [[menu.tools > menu.tools.macros > menu.tools.macro_editor]] (<kbd>Alt+F11</kbd>) mostra e edita o código. Macros que chamam funções do Windows ou o modelo de objetos do próprio editor não funcionam.
+O ModelaDraw executa projetos de macros VBA escritos para programas de desenho (versão para desktop). [[menu.tools > menu.tools.macros > menu.tools.macros_load]] adiciona um projeto (`.gms`) ou arquivos de módulo (`.bas`, `.cls`, `.frm`); os projetos ficam guardados e carregam ao iniciar. O [[docker.macros]] lista as macros: clique duas vezes numa delas ou use [[menu.tools > menu.tools.macros > menu.tools.macros_run]] (<kbd>Alt+Shift+F8</kbd>) para executá-la. Formulários, caixas de mensagem e de entrada da macro aparecem na tela, <kbd>Esc</kbd> ou [[menu.tools > menu.tools.macros > menu.tools.macros_stop]] interrompe, e tudo o que uma execução muda é um único passo de desfazer. [[menu.tools > menu.tools.macros > menu.tools.macro_editor]] (<kbd>Alt+F11</kbd>) mostra e edita o código. Macros que chamam funções do Windows ou o modelo de objetos do próprio editor não funcionam.

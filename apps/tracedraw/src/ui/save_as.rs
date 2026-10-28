@@ -444,7 +444,7 @@ pub fn tdraw_version_label(version: u32) -> String {
         return format!("v{version}");
     }
     let release = TDRAW_RELEASES.get(version as usize).copied().unwrap_or("?");
-    format!("v{version} (TraceDraw {release})")
+    format!("v{version} ({} {release})", crate::APP_NAME)
 }
 
 /// The `.cdr` versions offered, newest first: from the oldest checked to
@@ -927,7 +927,7 @@ fn fields(ui: &mut Ui, st: &mut SaveAsState) {
                 if cdr {
                     tr("file.cdr_files")
                 } else {
-                    "TraceDraw (*.tdraw)".to_string()
+                    "ModelaDraw (*.tdraw)".to_string()
                 }
             },
             260.0,

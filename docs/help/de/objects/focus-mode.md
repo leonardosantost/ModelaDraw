@@ -38,4 +38,4 @@ betroffen.
 - Ob ein Doppelklick den Fokusmodus öffnet, wird auf derselben Seite
   eingestellt.
 
-Siehe [TraceDraw-Optionen](../customize/options-app.md#edit).
+Siehe [ModelaDraw-Optionen](../customize/options-app.md#edit).

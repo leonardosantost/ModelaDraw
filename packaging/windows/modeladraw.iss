@@ -1,5 +1,5 @@
-; Inno Setup script for TraceDraw. Built by CI on windows-latest.
-; Variables: /DVersion=x.y.z /DSrcDir=<dir with tracedraw.exe and tracedraw-cli.exe>
+; Inno Setup script for ModelaDraw. Built by CI on windows-latest.
+; Variables: /DVersion=x.y.z /DSrcDir=<dir with modeladraw.exe and tracedraw-cli.exe>
 
 #ifndef Version
   #define Version "0.0.0"
@@ -9,17 +9,17 @@
 #endif
 
 [Setup]
-AppId={{7E6E3B5C-4C1E-4F7B-9D7A-2B9D5C1A0E11}
-AppName=TraceDraw
+AppId={{07B010F3-415B-4D51-B424-60BB11AB9837}
+AppName=ModelaDraw
 AppVersion={#Version}
-AppPublisher=Ighor Toth
-AppCopyright=Copyright (c) 2026 Ighor Toth and the TraceDraw contributors
-AppPublisherURL=https://github.com/igtoth/tracedraw
-DefaultDirName={autopf}\TraceDraw
-DefaultGroupName=TraceDraw
-UninstallDisplayIcon={app}\tracedraw.exe
+AppPublisher=ModelaDraw
+AppCopyright=Copyright (c) 2026 Ighor Toth and the TraceDraw contributors; ModelaDraw contributors
+AppPublisherURL=https://github.com/leonardosantost/ModelaDraw
+DefaultDirName={autopf}\ModelaDraw
+DefaultGroupName=ModelaDraw
+UninstallDisplayIcon={app}\modeladraw.exe
 OutputDir=..\..\dist
-OutputBaseFilename=tracedraw-{#Version}-windows-x86_64-setup
+OutputBaseFilename=modeladraw-{#Version}-windows-x86_64-setup
 SetupIconFile=..\..\assets\icon\tracedraw.ico
 Compression=lzma2
 SolidCompression=yes
@@ -39,30 +39,30 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "addtopath"; Description: "Add tracedraw-cli to PATH"; GroupDescription: "Command line:"
 
 [Files]
-Source: "{#SrcDir}\tracedraw.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SrcDir}\modeladraw.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcDir}\tracedraw-cli.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\LICENSE-MIT"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\LICENSE-APACHE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\TraceDraw"; Filename: "{app}\tracedraw.exe"
-Name: "{group}\Uninstall TraceDraw"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\TraceDraw"; Filename: "{app}\tracedraw.exe"; Tasks: desktopicon
+Name: "{group}\ModelaDraw"; Filename: "{app}\modeladraw.exe"
+Name: "{group}\Uninstall ModelaDraw"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\ModelaDraw"; Filename: "{app}\modeladraw.exe"; Tasks: desktopicon
 
 [Registry]
 ; .tdraw file association
-Root: HKA; Subkey: "Software\Classes\.tdraw"; ValueType: string; ValueName: ""; ValueData: "TraceDraw.Document"; Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\TraceDraw.Document"; ValueType: string; ValueName: ""; ValueData: "TraceDraw Document"; Flags: uninsdeletekey
-Root: HKA; Subkey: "Software\Classes\TraceDraw.Document\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\tracedraw.exe,0"
-Root: HKA; Subkey: "Software\Classes\TraceDraw.Document\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\tracedraw.exe"" ""%1"""
-; "Open with TraceDraw" for .cdr, without stealing the default
-Root: HKA; Subkey: "Software\Classes\.cdr\OpenWithProgids"; ValueType: string; ValueName: "TraceDraw.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.tdraw"; ValueType: string; ValueName: ""; ValueData: "ModelaDraw.Document"; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\ModelaDraw.Document"; ValueType: string; ValueName: ""; ValueData: "ModelaDraw Document"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\ModelaDraw.Document\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\modeladraw.exe,0"
+Root: HKA; Subkey: "Software\Classes\ModelaDraw.Document\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\modeladraw.exe"" ""%1"""
+; "Open with ModelaDraw" for .cdr, without stealing the default
+Root: HKA; Subkey: "Software\Classes\.cdr\OpenWithProgids"; ValueType: string; ValueName: "ModelaDraw.Document"; ValueData: ""; Flags: uninsdeletevalue
 ; PATH
 Root: HKA; Subkey: "{code:PathRegKey}"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Tasks: addtopath; Check: NeedsAddPath('{app}')
 
 [Run]
-Filename: "{app}\tracedraw.exe"; Description: "{cm:LaunchProgram,TraceDraw}"; Flags: nowait postinstall skipifsilent shellexec runasoriginaluser
+Filename: "{app}\modeladraw.exe"; Description: "{cm:LaunchProgram,ModelaDraw}"; Flags: nowait postinstall skipifsilent shellexec runasoriginaluser
 
 [Code]
 function PathRegKey(Param: string): string;

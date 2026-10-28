@@ -12,6 +12,8 @@ in [[menu.window > menu.window.workspace]], o nella pagina
 ## Aree di lavoro integrate {#built-in}
 
 - [[menu.window.workspace_default]]: la configurazione abituale.
+- [[menu.window.workspace_modeling]]: la configurazione di disegno completa con il pannello Modela Nesting aperto.
+- [[menu.window.workspace_embroidery]]: il pannello Ricamo (tipi di punto, sequenza, telaio, tessuto e fili) e la barra del ricamo.
 - [[menu.window.workspace_lite]]: meno barre, per un primo avvio.
 - [[menu.window.workspace_classic]], [[menu.window.workspace_illustration]] e
   [[menu.window.workspace_page_layout]]: barre e pannelli per quei tipi di
@@ -23,7 +25,7 @@ in [[menu.window > menu.window.workspace]], o nella pagina
 
 ## Cosa viene conservato {#kept}
 
-Tutto ciò che cambi viene conservato quando TraceDraw si chiude e ritorna la
+Tutto ciò che cambi viene conservato quando ModelaDraw si chiude e ritorna la
 volta successiva: le opzioni, dove si trova ciascuna barra e quali barre sono
 visibili, lo strumento mostrato da ciascun gruppo della casella degli
 strumenti, i pannelli aperti, le unità, l'aggancio, le impostazioni dei nuovi

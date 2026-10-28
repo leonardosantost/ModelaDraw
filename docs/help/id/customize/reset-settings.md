@@ -1,16 +1,16 @@
 # Mengatur ulang pengaturan
 
 Bila pengaturan Anda menjadi kacau, Anda dapat mengembalikan setiap preferensi
-seperti saat TraceDraw pertama kali dipasang. Gambar Anda tidak pernah
+seperti saat ModelaDraw pertama kali dipasang. Gambar Anda tidak pernah
 tersentuh.
 
 ## Untuk mengatur ulang semua pengaturan {#reset}
 
 - Pilih [[options.reset_all]] di halaman [[options.general]] pada
   [[menu.tools > menu.tools.options > menu.tools.options_global]].
-- Atau tekan <kbd>F8</kbd> saat layar pembuka tampil ketika TraceDraw dimulai.
+- Atau tekan <kbd>F8</kbd> saat layar pembuka tampil ketika ModelaDraw dimulai.
 
-TraceDraw bertanya lebih dahulu. **Atur ulang** mengembalikan setiap
+ModelaDraw bertanya lebih dahulu. **Atur ulang** mengembalikan setiap
 preferensi, tetapi mempertahankan daftar gambar terbaru, folder terakhir, dan
 ukuran jendela. [[dialog.cancel]] tidak mengubah apa pun.
 

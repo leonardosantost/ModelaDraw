@@ -1,6 +1,6 @@
 # Keeping drawings on GitHub
 
-TraceDraw can open drawings from a GitHub repository and save them back as
+ModelaDraw can open drawings from a GitHub repository and save them back as
 commits, on the desktop and in the browser. Each save becomes a version in
 the repository's history, which you can open again later. The commands are
 in [[menu.file > menu.file.github]].
@@ -12,7 +12,7 @@ create a fine-grained personal access token on GitHub with read and write
 access to the contents of the repository, and paste it in the
 [[github.token]] field.
 
-The token is kept while TraceDraw runs. Tick [[github.remember_token]] to
+The token is kept while ModelaDraw runs. Tick [[github.remember_token]] to
 keep it for the next time; it is then stored in plain text in your
 preferences (in the browser, in that browser's storage). The dialog boxes
 also remember the last repository, branch and path.

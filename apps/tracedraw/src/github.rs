@@ -138,7 +138,7 @@ fn headers(token: &str, accept: &str) -> Vec<(String, String)> {
     if !crate::files::WEB {
         h.push((
             "User-Agent".to_string(),
-            concat!("TraceDraw/", env!("CARGO_PKG_VERSION")).to_string(),
+            concat!("ModelaDraw/", env!("CARGO_PKG_VERSION")).to_string(),
         ));
     }
     h

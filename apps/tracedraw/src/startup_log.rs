@@ -75,7 +75,7 @@ pub fn init() {
     .target(env_logger::Target::Pipe(Box::new(Tee { file })))
     .init();
     log::info!(
-        "TraceDraw {} on {} {}",
+        "ModelaDraw {} on {} {}",
         env!("CARGO_PKG_VERSION"),
         std::env::consts::OS,
         std::env::consts::ARCH
@@ -174,7 +174,7 @@ pub fn report(info: &std::panic::PanicHookInfo<'_>) -> String {
         .map(|l| format!("{}:{}", l.file(), l.line()))
         .unwrap_or_default();
     format!(
-        "TraceDraw {} ({} {}) stopped: {what} at {place}\n{}",
+        "ModelaDraw {} ({} {}) stopped: {what} at {place}\n{}",
         env!("CARGO_PKG_VERSION"),
         std::env::consts::OS,
         std::env::consts::ARCH,
@@ -191,7 +191,7 @@ pub fn no_window(reason: &str) {
     let text = crate::i18n::trf("dialog.no_window", &[("reason", reason), ("log", &log)]);
     let _ = rfd::MessageDialog::new()
         .set_level(rfd::MessageLevel::Error)
-        .set_title("TraceDraw")
+        .set_title(crate::APP_NAME)
         .set_description(text)
         .set_buttons(rfd::MessageButtons::Ok)
         .show();
@@ -208,13 +208,13 @@ fn show(report: &str, saved: Option<&Path>) {
     let mut text = format!("{first}\n\n");
     if let Some(p) = saved {
         text.push_str(&format!(
-            "The details are in {}. Please attach that file to an issue at https://github.com/igtoth/tracedraw/issues",
+            "The details are in {}. Please attach that file to an issue at https://github.com/leonardosantost/ModelaDraw/issues",
             p.display()
         ));
     }
     let _ = rfd::MessageDialog::new()
         .set_level(rfd::MessageLevel::Error)
-        .set_title("TraceDraw")
+        .set_title(crate::APP_NAME)
         .set_description(text)
         .set_buttons(rfd::MessageButtons::Ok)
         .show();
@@ -228,7 +228,7 @@ mod tests {
     /// version, what happened and where.
     #[test]
     fn the_log_and_the_crash_report_go_in_the_settings_folder() {
-        let d = Path::new("/somewhere/TraceDraw");
+        let d = Path::new("/somewhere/ModelaDraw");
         assert_eq!(log_path(d), d.join("tracedraw.log"));
         assert_eq!(crash_path(d), d.join("crash.log"));
         let seen = std::sync::Arc::new(Mutex::new(String::new()));

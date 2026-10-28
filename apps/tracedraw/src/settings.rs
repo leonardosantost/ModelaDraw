@@ -1,6 +1,6 @@
 //! User settings persisted between sessions: language, recent files,
 //! workspace flags, tool defaults. Stored as JSON in the platform config
-//! directory (`%APPDATA%\TraceDraw`, `~/Library/Application Support/TraceDraw`,
+//! directory (`%APPDATA%\ModelaDraw`, `~/Library/Application Support/ModelaDraw`,
 //! `$XDG_CONFIG_HOME/tracedraw`).
 
 use serde::{Deserialize, Serialize};
@@ -202,7 +202,7 @@ pub struct Settings {
     /// as `ui_scale`, which is ignored.
     #[serde(default)]
     pub ui_size: f32,
-    /// Options > General: show the splash screen while TraceDraw starts.
+    /// Options > General: show the splash screen while ModelaDraw starts.
     #[serde(default = "default_true")]
     pub show_splash: bool,
     /// Options > General: draw the window with the graphics card (off:
@@ -299,11 +299,11 @@ pub struct Settings {
     /// by default).
     #[serde(default = "default_true")]
     pub treat_all_filled: bool,
-    /// Options > TraceDraw > Edit: how visible the objects outside the
+    /// Options > ModelaDraw > Edit: how visible the objects outside the
     /// one in focus stay, in percent.
     #[serde(default = "default_focus_visibility")]
     pub focus_visibility: u8,
-    /// Options > TraceDraw > Edit: a double click on a group brings it
+    /// Options > ModelaDraw > Edit: a double click on a group brings it
     /// into focus.
     #[serde(default = "default_true")]
     pub focus_double_click: bool,
@@ -361,7 +361,7 @@ pub struct Settings {
     /// What a fill or outline chosen with nothing selected changes.
     #[serde(default)]
     pub defaults: crate::defaults::DefaultsPrefs,
-    /// The bars shown when TraceDraw was left; none in preferences written
+    /// The bars shown when ModelaDraw was left; none in preferences written
     /// before they were kept (the workspace's own bars then show).
     #[serde(default)]
     pub shown_bars: Option<ShownBars>,
@@ -1298,7 +1298,7 @@ pub struct SpellingPrefs {
     /// A word the spell checker replaces is added to the Autocorrect
     /// replacements, so typing it wrong again corrects it.
     pub add_to_autocorrect: bool,
-    /// A folder of Hunspell dictionaries besides TraceDraw's own.
+    /// A folder of Hunspell dictionaries besides ModelaDraw's own.
     pub dictionary_folder: Option<PathBuf>,
     /// The dictionaries switched off, by name (`pt_BR`).
     pub disabled_dictionaries: Vec<String>,
@@ -1450,10 +1450,10 @@ impl Default for Settings {
     }
 }
 
-/// The folder of a portable copy: a folder called `tracedraw-settings`
+/// The folder of a portable copy: a folder called `modeladraw-settings`
 /// next to the program keeps its preferences there (a USB stick, a copy
 /// that leaves no trace on the computer).
-pub const PORTABLE_DIR: &str = "tracedraw-settings";
+pub const PORTABLE_DIR: &str = "modeladraw-settings";
 
 /// The portable settings folder next to the program `exe`, when there is
 /// one.
@@ -1472,19 +1472,19 @@ pub fn config_dir() -> Option<PathBuf> {
     }
     #[cfg(target_os = "windows")]
     {
-        std::env::var_os("APPDATA").map(|p| PathBuf::from(p).join("TraceDraw"))
+        std::env::var_os("APPDATA").map(|p| PathBuf::from(p).join("ModelaDraw"))
     }
     #[cfg(target_os = "macos")]
     {
         std::env::var_os("HOME")
-            .map(|p| PathBuf::from(p).join("Library/Application Support/TraceDraw"))
+            .map(|p| PathBuf::from(p).join("Library/Application Support/ModelaDraw"))
     }
     #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     {
         std::env::var_os("XDG_CONFIG_HOME")
             .map(PathBuf::from)
             .or_else(|| std::env::var_os("HOME").map(|p| PathBuf::from(p).join(".config")))
-            .map(|p| p.join("tracedraw"))
+            .map(|p| p.join("modeladraw"))
     }
 }
 
@@ -1493,7 +1493,7 @@ pub fn config_dir() -> Option<PathBuf> {
 const WEB_KEY: &str = "tracedraw.settings";
 
 impl Settings {
-    /// The preferences as TraceDraw comes, keeping what is history rather
+    /// The preferences as ModelaDraw comes, keeping what is history rather
     /// than choice: the recent drawings, the last folder and the window's
     /// size.
     pub fn reset_keeping_history(&self) -> Settings {

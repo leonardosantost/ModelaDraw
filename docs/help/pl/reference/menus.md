@@ -400,6 +400,8 @@ ekran powitalny. Menu mogą pokazywać Twoje własne skróty; zobacz
 | [[menu.window.dock_window]] | [The workspace](../get-started/workspace.md#several-drawings) |
 | [[menu.window.workspace]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_default]] | [Workspaces](../customize/workspaces.md) |
+| [[menu.window.workspace_modeling]] | [Workspaces](../customize/workspaces.md) |
+| [[menu.window.workspace_embroidery]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_lite]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_classic]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_illustration]] | [Workspaces](../customize/workspaces.md) |
@@ -432,17 +434,17 @@ ekran powitalny. Menu mogą pokazywać Twoje własne skróty; zobacz
 
 | Polecenie | Zobacz |
 |---|---|
-| [[menu.help.help_topics]] | [Witamy w Pomocy programu TraceDraw](../index.md#in-the-app) |
-| [[menu.help.product_help]] | [Witamy w Pomocy programu TraceDraw](../index.md#in-the-app) |
-| [[menu.help.welcome_screen]] | [O programie TraceDraw i aktualizacje](../welcome/about-and-updates.md) |
-| [[menu.help.video_tutorials]] | [O programie TraceDraw i aktualizacje](../welcome/about-and-updates.md) |
+| [[menu.help.help_topics]] | [Witamy w Pomocy programu ModelaDraw](../index.md#in-the-app) |
+| [[menu.help.product_help]] | [Witamy w Pomocy programu ModelaDraw](../index.md#in-the-app) |
+| [[menu.help.welcome_screen]] | [O programie ModelaDraw i aktualizacje](../welcome/about-and-updates.md) |
+| [[menu.help.video_tutorials]] | [O programie ModelaDraw i aktualizacje](../welcome/about-and-updates.md) |
 | [[menu.help.hints]] | [The Hints panel](../get-started/hints.md) |
-| [[menu.help.quick_start_guide]] | [O programie TraceDraw i aktualizacje](../welcome/about-and-updates.md) |
-| [[menu.help.user_guide]] | [O programie TraceDraw i aktualizacje](../welcome/about-and-updates.md) |
+| [[menu.help.quick_start_guide]] | [O programie ModelaDraw i aktualizacje](../welcome/about-and-updates.md) |
+| [[menu.help.user_guide]] | [O programie ModelaDraw i aktualizacje](../welcome/about-and-updates.md) |
 | [[menu.help.whats_new]] | [Co nowego](../welcome/whats-new.md) |
 | [[menu.help.highlight_whats_new]] | [Co nowego](../welcome/whats-new.md) |
-| [[menu.help.updates]] | [O programie TraceDraw i aktualizacje](../welcome/about-and-updates.md) |
-| [[menu.help.message_settings]] | [O programie TraceDraw i aktualizacje](../welcome/about-and-updates.md) |
-| [[menu.help.community]] | [O programie TraceDraw i aktualizacje](../welcome/about-and-updates.md) |
-| [[menu.help.support]] | [O programie TraceDraw i aktualizacje](../welcome/about-and-updates.md) |
-| [[menu.help.about]] | [O programie TraceDraw i aktualizacje](../welcome/about-and-updates.md) |
+| [[menu.help.updates]] | [O programie ModelaDraw i aktualizacje](../welcome/about-and-updates.md) |
+| [[menu.help.message_settings]] | [O programie ModelaDraw i aktualizacje](../welcome/about-and-updates.md) |
+| [[menu.help.community]] | [O programie ModelaDraw i aktualizacje](../welcome/about-and-updates.md) |
+| [[menu.help.support]] | [O programie ModelaDraw i aktualizacje](../welcome/about-and-updates.md) |
+| [[menu.help.about]] | [O programie ModelaDraw i aktualizacje](../welcome/about-and-updates.md) |

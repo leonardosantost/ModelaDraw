@@ -7,13 +7,15 @@
 ## 内置工作区 {#built-in}
 
 - [[menu.window.workspace_default]]：常用设置。
+- [[menu.window.workspace_modeling]]：完整的设计设置，并打开 Modela 排料面板。
+- [[menu.window.workspace_embroidery]]：刺绣面板（针迹类型、绣制顺序、绣框、面料和绣线）和刺绣栏（针迹视图、转换为缎纹、按颜色排序，导出和打开 DST、PES、JEF、EXP、VP3、XXX、U01 和 TAP 绣花机文件）。
 - [[menu.window.workspace_lite]]：栏更少，适合初次使用。
 - [[menu.window.workspace_classic]]、[[menu.window.workspace_illustration]] 和 [[menu.window.workspace_page_layout]]：适合这些工作类型的栏和面板。
 - [[menu.window.workspace_touch]]：用于触摸屏。界面绘制得更大，标尺、面板和状态栏被隐藏，使用任何工具时都可以用两根手指平移，捏合手指缩放。绘图保持其实际大小。
 
 ## 保留的内容 {#kept}
 
-你更改的一切都会在 TraceDraw 关闭时保留，并在下次启动时恢复：选项、每个栏的位置以及显示哪些栏、每个工具箱组显示的工具、打开的面板、单位、贴齐、新对象采用的设置以及窗口显示的内容。
+你更改的一切都会在 ModelaDraw 关闭时保留，并在下次启动时恢复：选项、每个栏的位置以及显示哪些栏、每个工具箱组显示的工具、打开的面板、单位、贴齐、新对象采用的设置以及窗口显示的内容。
 
 ## 导出和导入你的设置 {#export-import}
 

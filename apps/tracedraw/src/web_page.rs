@@ -58,7 +58,7 @@ mod tests {
 
     /// The loading page shows the splash screen of the desktop app (name,
     /// tagline, status, progress bar, copyright and version), says what
-    /// TraceDraw is, links to the downloads and the code, and has the
+    /// ModelaDraw is, links to the downloads and the code, and has the
     /// elements the module and its loader use.
     #[test]
     fn the_loading_page_shows_the_splash_and_says_what_it_is() {
@@ -80,9 +80,9 @@ mod tests {
             "Written in Rust",
             "MIT or Apache-2.0",
             // Where to go when loading stalls.
-            "https://github.com/igtoth/tracedraw/releases/latest",
-            "https://github.com/igtoth/tracedraw\"",
-            "https://github.com/igtoth/tracedraw/issues",
+            "https://github.com/leonardosantost/ModelaDraw/releases/latest",
+            "https://github.com/leonardosantost/ModelaDraw\"",
+            "https://github.com/leonardosantost/ModelaDraw/issues",
             // Which screens it is for.
             "desktop browser",
             "Window &gt; Workspace &gt; Touch",
@@ -95,8 +95,8 @@ mod tests {
             "id=\"loading-error\"",
             // The module's size for the progress, and the module itself.
             "data-wasm-size=\"0\"",
-            "import init from \"./tracedraw.js\"",
-            "tracedraw_bg.wasm",
+            "import init from \"./modeladraw.js\"",
+            "modeladraw_bg.wasm",
             "init({ module_or_path: bytes })",
         ] {
             assert!(PAGE.contains(needed), "the page lacks {needed:?}");
@@ -111,7 +111,7 @@ mod tests {
     fn the_builds_fill_in_the_modules_size_and_the_version() {
         for (name, text) in [("scripts/web/build.sh", BUILD_SCRIPT), ("build.yml", CI)] {
             assert!(
-                text.contains("data-wasm-size=\\\"0\\\"") && text.contains("tracedraw_bg.wasm"),
+                text.contains("data-wasm-size=\\\"0\\\"") && text.contains("modeladraw_bg.wasm"),
                 "{name} does not fill in the module's size"
             );
             assert!(
@@ -127,7 +127,7 @@ mod tests {
     fn the_builds_shrink_the_module_before_measuring_it() {
         for (name, text) in [("scripts/web/build.sh", BUILD_SCRIPT), ("build.yml", CI)] {
             let opt = text.find("wasm-opt -Oz --strip-debug --strip-producers");
-            let size = text.find("size=$(wc -c < site/tracedraw_bg.wasm");
+            let size = text.find("size=$(wc -c < site/modeladraw_bg.wasm");
             assert!(
                 matches!((opt, size), (Some(o), Some(s)) if o < s),
                 "{name} does not run wasm-opt before measuring the module"

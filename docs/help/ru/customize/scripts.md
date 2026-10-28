@@ -9,7 +9,7 @@ menu.tools.scripts_docker]]).
 
 ## Написание и запуск сценариев {#run}
 
-Сценарий работает с объектами TraceDraw: `Application`, `ActiveDocument`,
+Сценарий работает с объектами ModelaDraw: `Application`, `ActiveDocument`,
 `ActivePage`, `ActiveLayer`, а также с фигурами, заливками, абрисами, цветами,
 кривыми и эффектами. Например:
 
@@ -45,17 +45,17 @@ for (let i = 0; i < 5; i++) {
 
 ## ИИ-ассистенты (MCP) {#mcp}
 
-TraceDraw поддерживает Model Context Protocol, поэтому ИИ-ассистенты на вашем
+ModelaDraw поддерживает Model Context Protocol, поэтому ИИ-ассистенты на вашем
 компьютере могут открывать, редактировать, изучать, экспортировать и сохранять
 рисунки:
 
-- `tracedraw --mcp` запускает TraceDraw без окна для ассистента.
+- `tracedraw --mcp` запускает ModelaDraw без окна для ассистента.
 - Чтобы ассистент мог редактировать рисунок, открытый в вашем окне, включите
   [[options.mcp_window]] на странице [[options.general]] в
   [[menu.tools > menu.tools.options > menu.tools.options_global]] и укажите
   ассистенту команду `tracedraw --mcp-window`. Каждое изменение является одним
   шагом отмены, который можно вернуть. Подключиться могут только программы на
-  вашем компьютере, у которых есть секретный токен, записываемый TraceDraw.
+  вашем компьютере, у которых есть секретный токен, записываемый ModelaDraw.
 
 ## Инструмент командной строки {#cli}
 
@@ -64,4 +64,4 @@ TraceDraw поддерживает Model Context Protocol, поэтому ИИ-�
 
 ## Макросы {#macros}
 
-TraceDraw выполняет проекты макросов VBA, написанные для графических редакторов (настольная версия). [[menu.tools > menu.tools.macros > menu.tools.macros_load]] добавляет проект (`.gms`) или файлы модулей (`.bas`, `.cls`, `.frm`); проекты сохраняются и загружаются при запуске. Панель [[docker.macros]] показывает их макросы: дважды щёлкните макрос или выберите [[menu.tools > menu.tools.macros > menu.tools.macros_run]] (<kbd>Alt+Shift+F8</kbd>), чтобы запустить его. Формы, окна сообщений и ввода макроса появляются на экране, <kbd>Esc</kbd> или [[menu.tools > menu.tools.macros > menu.tools.macros_stop]] останавливает его, а всё, что меняет один запуск, отменяется одним шагом. [[menu.tools > menu.tools.macros > menu.tools.macro_editor]] (<kbd>Alt+F11</kbd>) показывает и изменяет код. Макросы, вызывающие функции Windows или объектную модель самого редактора, не работают.
+ModelaDraw выполняет проекты макросов VBA, написанные для графических редакторов (настольная версия). [[menu.tools > menu.tools.macros > menu.tools.macros_load]] добавляет проект (`.gms`) или файлы модулей (`.bas`, `.cls`, `.frm`); проекты сохраняются и загружаются при запуске. Панель [[docker.macros]] показывает их макросы: дважды щёлкните макрос или выберите [[menu.tools > menu.tools.macros > menu.tools.macros_run]] (<kbd>Alt+Shift+F8</kbd>), чтобы запустить его. Формы, окна сообщений и ввода макроса появляются на экране, <kbd>Esc</kbd> или [[menu.tools > menu.tools.macros > menu.tools.macros_stop]] останавливает его, а всё, что меняет один запуск, отменяется одним шагом. [[menu.tools > menu.tools.macros > menu.tools.macro_editor]] (<kbd>Alt+F11</kbd>) показывает и изменяет код. Макросы, вызывающие функции Windows или объектную модель самого редактора, не работают.

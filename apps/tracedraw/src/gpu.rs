@@ -404,7 +404,7 @@ pub fn watch_start(
                         if spawn_with(n, &args) {
                             std::process::exit(0);
                         }
-                        log::error!("could not start TraceDraw again with {n:?}");
+                        log::error!("could not start ModelaDraw again with {n:?}");
                         return;
                     }
                 }

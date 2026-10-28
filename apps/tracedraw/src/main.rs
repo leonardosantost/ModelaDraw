@@ -8,7 +8,15 @@
 // No console window in release builds on Windows.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-//! TraceDraw desktop app: a thin egui shell over the engine.
+//! ModelaDraw desktop app (powered by TraceDraw): a thin egui shell over
+//! the engine.
+
+/// The application's name, wherever the interface shows it.
+pub const APP_NAME: &str = "ModelaDraw";
+/// The line under the name in the About box and the splash screen.
+pub const POWERED_BY: &str = "powered by TraceDraw";
+/// The repository: releases, updates and issues.
+pub const REPO: &str = "leonardosantost/ModelaDraw";
 
 mod ai;
 mod ai_image;
@@ -244,7 +252,7 @@ fn main() -> eframe::Result<()> {
             .with_inner_size(splash::SIZE)
             .with_decorations(false)
             .with_resizable(true)
-            .with_title("TraceDraw")
+            .with_title(APP_NAME)
     } else {
         splash::main_window_builder(&settings, plain)
     };
@@ -287,7 +295,7 @@ fn main() -> eframe::Result<()> {
     startup_log::quiet_panics(next.is_some());
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         eframe::run_native(
-            "TraceDraw",
+            APP_NAME,
             options,
             Box::new(move |cc| {
                 gpu::note_renderer(cc, mode);
@@ -330,7 +338,7 @@ fn main() -> eframe::Result<()> {
             );
             if !gpu::restart_with(next, &args) {
                 let what = format!(
-                    "the window opened with {mode:?} but what it drew came back nearly black, and TraceDraw could not start again with {next:?}"
+                    "the window opened with {mode:?} but what it drew came back nearly black, and ModelaDraw could not start again with {next:?}"
                 );
                 log::error!("{what}");
                 startup_log::no_window(&what);

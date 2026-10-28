@@ -400,6 +400,8 @@ eigen sneltoetsen tonen; zie [Aanpassingsopties](../customize/customization.md#c
 | [[menu.window.dock_window]] | [The workspace](../get-started/workspace.md#several-drawings) |
 | [[menu.window.workspace]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_default]] | [Workspaces](../customize/workspaces.md) |
+| [[menu.window.workspace_modeling]] | [Workspaces](../customize/workspaces.md) |
+| [[menu.window.workspace_embroidery]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_lite]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_classic]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_illustration]] | [Workspaces](../customize/workspaces.md) |
@@ -432,17 +434,17 @@ eigen sneltoetsen tonen; zie [Aanpassingsopties](../customize/customization.md#c
 
 | Opdracht | Zie |
 |---|---|
-| [[menu.help.help_topics]] | [Welkom bij de Help van TraceDraw](../index.md#in-the-app) |
-| [[menu.help.product_help]] | [Welkom bij de Help van TraceDraw](../index.md#in-the-app) |
-| [[menu.help.welcome_screen]] | [Over TraceDraw en updates](../welcome/about-and-updates.md) |
-| [[menu.help.video_tutorials]] | [Over TraceDraw en updates](../welcome/about-and-updates.md) |
+| [[menu.help.help_topics]] | [Welkom bij de Help van ModelaDraw](../index.md#in-the-app) |
+| [[menu.help.product_help]] | [Welkom bij de Help van ModelaDraw](../index.md#in-the-app) |
+| [[menu.help.welcome_screen]] | [Over ModelaDraw en updates](../welcome/about-and-updates.md) |
+| [[menu.help.video_tutorials]] | [Over ModelaDraw en updates](../welcome/about-and-updates.md) |
 | [[menu.help.hints]] | [The Hints panel](../get-started/hints.md) |
-| [[menu.help.quick_start_guide]] | [Over TraceDraw en updates](../welcome/about-and-updates.md) |
-| [[menu.help.user_guide]] | [Over TraceDraw en updates](../welcome/about-and-updates.md) |
+| [[menu.help.quick_start_guide]] | [Over ModelaDraw en updates](../welcome/about-and-updates.md) |
+| [[menu.help.user_guide]] | [Over ModelaDraw en updates](../welcome/about-and-updates.md) |
 | [[menu.help.whats_new]] | [Wat is er nieuw](../welcome/whats-new.md) |
 | [[menu.help.highlight_whats_new]] | [Wat is er nieuw](../welcome/whats-new.md) |
-| [[menu.help.updates]] | [Over TraceDraw en updates](../welcome/about-and-updates.md) |
-| [[menu.help.message_settings]] | [Over TraceDraw en updates](../welcome/about-and-updates.md) |
-| [[menu.help.community]] | [Over TraceDraw en updates](../welcome/about-and-updates.md) |
-| [[menu.help.support]] | [Over TraceDraw en updates](../welcome/about-and-updates.md) |
-| [[menu.help.about]] | [Over TraceDraw en updates](../welcome/about-and-updates.md) |
+| [[menu.help.updates]] | [Over ModelaDraw en updates](../welcome/about-and-updates.md) |
+| [[menu.help.message_settings]] | [Over ModelaDraw en updates](../welcome/about-and-updates.md) |
+| [[menu.help.community]] | [Over ModelaDraw en updates](../welcome/about-and-updates.md) |
+| [[menu.help.support]] | [Over ModelaDraw en updates](../welcome/about-and-updates.md) |
+| [[menu.help.about]] | [Over ModelaDraw en updates](../welcome/about-and-updates.md) |

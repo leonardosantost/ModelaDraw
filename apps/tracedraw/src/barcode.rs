@@ -63,7 +63,7 @@ impl Symbology {
         match self {
             Symbology::Codabar => "1234567890123",
             Symbology::Code39 => "TRACEDRAW-2026",
-            Symbology::Code128 => "TraceDraw 2026",
+            Symbology::Code128 => "ModelaDraw 2026",
             Symbology::Ean13 => "590123412345",
             Symbology::Ean8 => "9638507",
             Symbology::UpcA => "03600029145",

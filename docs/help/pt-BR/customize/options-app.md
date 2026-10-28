@@ -1,23 +1,23 @@
-# Opções do TraceDraw
+# Opções do ModelaDraw
 
 [[menu.tools > menu.tools.options > menu.tools.options_app]] (<kbd>Ctrl+J</kbd>)
 define como o programa funciona. Escolha uma página na lista à esquerda.
 
 ## Geral {#general}
 
-![A página Geral das opções do TraceDraw](../../img/customize-options-app-general.png)
+![A página Geral das opções do ModelaDraw](../../img/customize-options-app-general.png)
 
 - [[options.on_startup]]: mostrar a Tela de boas-vindas, começar um documento
   novo ou abrir o último documento editado.
 - [[options.show_new_document_dialog]] (ligado): pedir as configurações de um
   desenho novo; veja [Criar um desenho](../get-started/new-document.md).
 - [[options.show_splash]] (ligado).
-- [[options.hardware_acceleration]] (ligado): desenha a janela com a placa de vídeo escolhida ao lado ([[options.gpu_automatic]] de início); desligado, com o renderizador por software do computador. Vale a partir da próxima abertura. Se a janela não abrir assim, o TraceDraw abre de novo com o renderizador por software, depois com OpenGL, e guarda o que funcionou.
+- [[options.hardware_acceleration]] (ligado): desenha a janela com a placa de vídeo escolhida ao lado ([[options.gpu_automatic]] de início); desligado, com o renderizador por software do computador. Vale a partir da próxima abertura. Se a janela não abrir assim, o ModelaDraw abre de novo com o renderizador por software, depois com OpenGL, e guarda o que funcionou.
 - [[options.undo_levels]]: quantos passos você pode desfazer (150 de início).
 
 ## Exibição {#display}
 
-![A página Exibição das opções do TraceDraw](../../img/customize-options-app-display.png)
+![A página Exibição das opções do ModelaDraw](../../img/customize-options-app-display.png)
 
 - [[menu.view.proof_colors]]: mostra as cores como serão impressas.
 - [[options.show_tooltips]] (ligado), [[options.hide_bbox_curve_tools]] e
@@ -32,7 +32,7 @@ define como o programa funciona. Escolha uma página na lista à esquerda.
 
 ## Edição {#edit}
 
-![A página Edição das opções do TraceDraw](../../img/customize-options-app-edit.png)
+![A página Edição das opções do ModelaDraw](../../img/customize-options-app-edit.png)
 
 - [[options.constrain_angle]]: o passo do <kbd>Ctrl</kbd> ao girar e desenhar
   (15 graus de início).
@@ -43,7 +43,7 @@ define como o programa funciona. Escolha uma página na lista à esquerda.
 
 ## Nós e alças {#nodes-and-handles}
 
-![A página Nós e alças das opções do TraceDraw](../../img/customize-options-app-nodes-and-handles.png)
+![A página Nós e alças das opções do ModelaDraw](../../img/customize-options-app-nodes-and-handles.png)
 
 - [[options.node_size]]: pequeno, médio ou grande.
 - [[options.node_shape]] para nós [[options.node_cusp]],
@@ -56,7 +56,7 @@ define como o programa funciona. Escolha uma página na lista à esquerda.
 
 ## Quadro de recorte {#clip-frame}
 
-![A página Quadro de recorte das opções do TraceDraw](../../img/customize-options-app-clip-frame.png)
+![A página Quadro de recorte das opções do ModelaDraw](../../img/customize-options-app-clip-frame.png)
 
 - [[options.auto_center]]: [[options.auto_center_outside]] (de início),
   [[options.auto_center_always]] ou [[options.auto_center_never]].
@@ -66,7 +66,7 @@ Veja [Colocar objetos dentro de um quadro](../objects/clip-frames.md).
 
 ## Encaixe {#snapping}
 
-![A página Encaixe das opções do TraceDraw](../../img/customize-options-app-snapping.png)
+![A página Encaixe das opções do ModelaDraw](../../img/customize-options-app-snapping.png)
 
 - [[options.snap_to_objects]], [[options.snap_to_page]],
   [[options.snap_to_guidelines]], [[options.snap_to_grid]], a grade de linha de
@@ -80,7 +80,7 @@ Veja [Encaixe](../pages-layout/snapping.md).
 
 ## Salvar {#save}
 
-![A página Salvar das opções do TraceDraw](../../img/customize-options-app-save.png)
+![A página Salvar das opções do ModelaDraw](../../img/customize-options-app-save.png)
 
 - [[options.backup]]: [[options.backup_before_save]] (ligado) guarda o arquivo
   anterior como `backup_of_<name>`, [[options.backup_to]] a
@@ -92,7 +92,7 @@ Veja [Encaixe](../pages-layout/snapping.md).
 
 ## Texto {#text}
 
-![A página Texto das opções do TraceDraw](../../img/customize-options-app-text.png)
+![A página Texto das opções do ModelaDraw](../../img/customize-options-app-text.png)
 
 A página tem cinco abas.
 

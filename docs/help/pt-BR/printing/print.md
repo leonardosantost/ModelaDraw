@@ -1,6 +1,6 @@
 # Imprimir um desenho
 
-Escolha [[menu.file > menu.file.print]] (<kbd>Ctrl+P</kbd>). O TraceDraw monta
+Escolha [[menu.file > menu.file.print]] (<kbd>Ctrl+P</kbd>). O ModelaDraw monta
 um PDF das folhas e o abre no visualizador do seu sistema, onde você escolhe a
 impressora e imprime. Na versão para navegador, o PDF é baixado.
 

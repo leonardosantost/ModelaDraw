@@ -57,7 +57,7 @@ pub fn handle_line(app: &mut App, line: &str) -> Option<String> {
         "initialize" => Ok(json!({
             "protocolVersion": PROTOCOL_VERSION,
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "tracedraw", "version": env!("CARGO_PKG_VERSION")},
+            "serverInfo": {"name": "modeladraw", "version": env!("CARGO_PKG_VERSION")},
         })),
         "ping" => Ok(json!({})),
         "tools/list" => Ok(json!({"tools": tool_list()})),
@@ -303,7 +303,7 @@ mod tests {
         let mut app = App::headless();
         let init = call(&mut app, 1, "initialize", json!({}));
         assert_eq!(init["result"]["protocolVersion"], PROTOCOL_VERSION);
-        assert_eq!(init["result"]["serverInfo"]["name"], "tracedraw");
+        assert_eq!(init["result"]["serverInfo"]["name"], "modeladraw");
         // A notification gets no reply.
         assert!(handle_line(
             &mut app,

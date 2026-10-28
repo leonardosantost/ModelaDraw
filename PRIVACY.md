@@ -1,12 +1,12 @@
 # Privacy policy
 
-TraceDraw is a vector editor that runs on your own computer. This policy
+ModelaDraw is a vector editor that runs on your own computer. This policy
 covers the desktop program (installer, portable zip, Microsoft Store,
 macOS and Linux packages), `tracedraw-cli` and the browser version.
 
-## What TraceDraw collects
+## What ModelaDraw collects
 
-Nothing. TraceDraw has no accounts, no telemetry, no analytics, no crash
+Nothing. ModelaDraw has no accounts, no telemetry, no analytics, no crash
 reporting and no advertising. It does not send your drawings, your files
 or anything about you or your computer anywhere, except what you ask the
 AI features to send to the AI service you set up yourself, and drawings
@@ -16,15 +16,15 @@ you save to your own GitHub repository (see below).
 
 - Your drawings, where you save them.
 - Preferences, the Shelf and thumbnails of recent drawings, in
-  TraceDraw's preferences folder (in the browser version: the page's local
+  ModelaDraw's preferences folder (in the browser version: the page's local
   storage in your browser). Deleting that folder removes them; Options >
   Global > Reset all settings puts the preferences back as they came.
 - Automatic backups of open drawings, in the folder set in Options > Save
-  (by default a `TraceDraw` folder in your system's temporary folder).
+  (by default a `ModelaDraw` folder in your system's temporary folder).
 - AI Drawing's settings (service, address, model) with the preferences;
   your API key only if you tick "Remember the key on this computer", and
   then in plain text in the preferences file (in the browser version: the
-  page's local storage). Otherwise the key is forgotten when TraceDraw
+  page's local storage). Otherwise the key is forgotten when ModelaDraw
   closes.
 - The same goes for File > GitHub's token: kept in the preferences file
   only if you tick the box to remember it.
@@ -33,15 +33,15 @@ you save to your own GitHub repository (see below).
   technical messages about the run, are never sent anywhere and are
   only shared if you attach them to a bug report yourself.
 
-## When TraceDraw uses the network
+## When ModelaDraw uses the network
 
 Only when you ask it to, plus one update check a day that you can turn
 off:
 
 - Update check (desktop): once a day at start, and when you choose
-  Help > Updates, TraceDraw asks GitHub's public API
+  Help > Updates, ModelaDraw asks GitHub's public API
   (`api.github.com`) for the project's latest release. The request
-  carries only TraceDraw's version in its User-Agent header; no
+  carries only ModelaDraw's version in its User-Agent header; no
   identifier, drawing or system detail. Turn it off in Options >
   Global > General > "Check for updates at start". Nothing is
   downloaded or installed unless you press Download (or, for the Linux
@@ -64,7 +64,7 @@ off:
   description of the active page (its size, layers and objects: types,
   positions, colours and text; no file names or pictures) to the AI
   service whose address you entered, with your API key. That service
-  handles them under its own terms and privacy policy. TraceDraw has no
+  handles them under its own terms and privacy policy. ModelaDraw has no
   AI service of its own and sends nothing to its authors.
 - AI images (making, remixing or cutting out pictures with the same
   service), only when you ask: it sends your request and, for a remix or
@@ -77,8 +77,8 @@ off:
 
 ## The browser version
 
-The browser version at <https://igtoth.github.io/tracedraw/> is a set of static
-files served by GitHub Pages. TraceDraw itself sends nothing (AI Drawing
+The browser version at <https://leonardosantost.github.io/ModelaDraw/> is a set of static
+files served by GitHub Pages. ModelaDraw itself sends nothing (AI Drawing
 aside, as above, from your browser to the service you set up). When a
 drawing's text needs a font of the page's font catalog, or the pointer
 rests on one in a font list, the page fetches that font's files from
@@ -90,6 +90,6 @@ Files you open in it stay in your browser.
 ## Contact
 
 Questions about this policy: open an issue at
-<https://github.com/igtoth/tracedraw/issues>.
+<https://github.com/leonardosantost/ModelaDraw/issues>.
 
 Last updated: 2026-10-28.

@@ -399,6 +399,8 @@
 | [[menu.window.dock_window]] | [The workspace](../get-started/workspace.md#several-drawings) |
 | [[menu.window.workspace]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_default]] | [Workspaces](../customize/workspaces.md) |
+| [[menu.window.workspace_modeling]] | [Workspaces](../customize/workspaces.md) |
+| [[menu.window.workspace_embroidery]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_lite]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_classic]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_illustration]] | [Workspaces](../customize/workspaces.md) |
@@ -431,17 +433,17 @@
 
 | কমান্ড | দেখুন |
 |---|---|
-| [[menu.help.help_topics]] | [TraceDraw সহায়তায় স্বাগতম](../index.md#in-the-app) |
-| [[menu.help.product_help]] | [TraceDraw সহায়তায় স্বাগতম](../index.md#in-the-app) |
-| [[menu.help.welcome_screen]] | [TraceDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
-| [[menu.help.video_tutorials]] | [TraceDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
+| [[menu.help.help_topics]] | [ModelaDraw সহায়তায় স্বাগতম](../index.md#in-the-app) |
+| [[menu.help.product_help]] | [ModelaDraw সহায়তায় স্বাগতম](../index.md#in-the-app) |
+| [[menu.help.welcome_screen]] | [ModelaDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
+| [[menu.help.video_tutorials]] | [ModelaDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
 | [[menu.help.hints]] | [The Hints panel](../get-started/hints.md) |
-| [[menu.help.quick_start_guide]] | [TraceDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
-| [[menu.help.user_guide]] | [TraceDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
+| [[menu.help.quick_start_guide]] | [ModelaDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
+| [[menu.help.user_guide]] | [ModelaDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
 | [[menu.help.whats_new]] | [নতুন কী](../welcome/whats-new.md) |
 | [[menu.help.highlight_whats_new]] | [নতুন কী](../welcome/whats-new.md) |
-| [[menu.help.updates]] | [TraceDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
-| [[menu.help.message_settings]] | [TraceDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
-| [[menu.help.community]] | [TraceDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
-| [[menu.help.support]] | [TraceDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
-| [[menu.help.about]] | [TraceDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
+| [[menu.help.updates]] | [ModelaDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
+| [[menu.help.message_settings]] | [ModelaDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
+| [[menu.help.community]] | [ModelaDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
+| [[menu.help.support]] | [ModelaDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |
+| [[menu.help.about]] | [ModelaDraw সম্পর্কে ও আপডেট](../welcome/about-and-updates.md) |

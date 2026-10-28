@@ -18,7 +18,7 @@ the same command.
 
 ## Options {#options}
 
-- **[[dialog.bg_colors]]** TraceDraw learns the background's colors from the
+- **[[dialog.bg_colors]]** ModelaDraw learns the background's colors from the
   edges of the picture (up to four, so a gradient or a two-tone backdrop
   works). To choose them yourself, click the eyedropper and click the
   background in a preview; each click adds a color. Click a color swatch to

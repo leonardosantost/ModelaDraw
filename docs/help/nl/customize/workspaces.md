@@ -11,6 +11,8 @@ van [[menu.tools > menu.tools.options > menu.tools.options_workspaces]].
 ## Ingebouwde werkruimten {#built-in}
 
 - [[menu.window.workspace_default]]: de gebruikelijke inrichting.
+- [[menu.window.workspace_modeling]]: de volledige ontwerpinrichting met het paneel Modela Nesting open.
+- [[menu.window.workspace_embroidery]]: het paneel Borduren (steeksoorten, naaivolgorde, borduurring, stof en garen) en de borduurbalk.
 - [[menu.window.workspace_lite]]: minder balken, voor een eerste start.
 - [[menu.window.workspace_classic]], [[menu.window.workspace_illustration]] en
   [[menu.window.workspace_page_layout]]: balken en panelen voor die soorten
@@ -22,7 +24,7 @@ van [[menu.tools > menu.tools.options > menu.tools.options_workspaces]].
 
 ## Wat bewaard blijft {#kept}
 
-Alles wat u wijzigt, blijft bewaard als TraceDraw wordt afgesloten en komt de
+Alles wat u wijzigt, blijft bewaard als ModelaDraw wordt afgesloten en komt de
 volgende keer terug: de opties, waar elke balk staat en welke balken zichtbaar
 zijn, het gereedschap dat elke groep van de gereedschapskist toont, de panelen
 die geopend zijn, eenheden, kleven, de instellingen die nieuwe objecten

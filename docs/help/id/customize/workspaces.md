@@ -11,6 +11,8 @@ salah satu di [[menu.window > menu.window.workspace]], atau di halaman
 ## Ruang kerja bawaan {#built-in}
 
 - [[menu.window.workspace_default]]: susunan yang biasa.
+- [[menu.window.workspace_modeling]]: pengaturan desain lengkap dengan panel Modela Nesting terbuka.
+- [[menu.window.workspace_embroidery]]: panel Bordir (jenis jahitan, urutan jahitan, pemidangan, kain dan benang) dan bilah bordir.
 - [[menu.window.workspace_lite]]: lebih sedikit bilah, untuk permulaan.
 - [[menu.window.workspace_classic]], [[menu.window.workspace_illustration]], dan
   [[menu.window.workspace_page_layout]]: bilah dan panel untuk jenis pekerjaan
@@ -22,7 +24,7 @@ salah satu di [[menu.window > menu.window.workspace]], atau di halaman
 
 ## Apa yang disimpan {#kept}
 
-Semua yang Anda ubah disimpan saat TraceDraw ditutup dan kembali pada
+Semua yang Anda ubah disimpan saat ModelaDraw ditutup dan kembali pada
 kesempatan berikutnya: opsi, letak setiap bilah dan bilah mana yang tampil,
 alat yang ditampilkan setiap kelompok kotak alat, panel yang terbuka, satuan,
 penempelan, pengaturan yang dipakai objek baru, dan apa yang ditampilkan jendela.

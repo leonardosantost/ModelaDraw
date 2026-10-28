@@ -749,7 +749,7 @@ fn run(app: &mut App, st: &mut FontManagerState, a: Action) {
                 "font_manager.installed_n",
                 &[("n", &paths.len().to_string())],
             ));
-            log::info!("installed for TraceDraw: {}", added.join(", "));
+            log::info!("installed for ModelaDraw: {}", added.join(", "));
             app.font_families = fonts.available_families();
             app.save_settings();
         }

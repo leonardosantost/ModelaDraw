@@ -9,7 +9,7 @@ menu.tools.scripts_docker]]).
 
 ## Menulis dan menjalankan skrip {#run}
 
-Skrip bekerja dengan objek-objek TraceDraw: `Application`,
+Skrip bekerja dengan objek-objek ModelaDraw: `Application`,
 `ActiveDocument`, `ActivePage`, `ActiveLayer`, serta bentuk, isian, garis
 luar, warna, kurva, dan efek. Contohnya:
 
@@ -45,16 +45,16 @@ Skrip yang mendefinisikan `TraceDrawFilter`, dengan nama, ekstensi, dan fungsi
 
 ## Asisten AI (MCP) {#mcp}
 
-TraceDraw mendukung Model Context Protocol, sehingga asisten AI di komputer
+ModelaDraw mendukung Model Context Protocol, sehingga asisten AI di komputer
 Anda dapat membuka, menyunting, memeriksa, mengekspor, dan menyimpan gambar:
 
-- `tracedraw --mcp` menjalankan TraceDraw tanpa jendela untuk asisten.
+- `tracedraw --mcp` menjalankan ModelaDraw tanpa jendela untuk asisten.
 - Agar asisten dapat menyunting gambar yang terbuka di jendela Anda, aktifkan
   [[options.mcp_window]] di halaman [[options.general]] pada
   [[menu.tools > menu.tools.options > menu.tools.options_global]], dan berikan
   `tracedraw --mcp-window` sebagai perintah asisten. Setiap perubahan adalah
   satu langkah urungkan yang dapat Anda batalkan. Hanya program di komputer
-  Anda yang memiliki token rahasia yang ditulis TraceDraw yang dapat
+  Anda yang memiliki token rahasia yang ditulis ModelaDraw yang dapat
   terhubung.
 
 ## Alat baris perintah {#cli}
@@ -64,4 +64,4 @@ format tanpa membuka program, untuk pekerjaan massal.
 
 ## Makro {#macros}
 
-TraceDraw menjalankan proyek makro VBA yang ditulis untuk program menggambar (versi desktop). [[menu.tools > menu.tools.macros > menu.tools.macros_load]] menambahkan proyek (`.gms`) atau berkas modul (`.bas`, `.cls`, `.frm`); proyek disimpan dan dimuat saat program dibuka. [[docker.macros]] menampilkan makronya: klik dua kali salah satunya atau gunakan [[menu.tools > menu.tools.macros > menu.tools.macros_run]] (<kbd>Alt+Shift+F8</kbd>) untuk menjalankannya. Formulir, kotak pesan, dan kotak input makro muncul di layar, <kbd>Esc</kbd> atau [[menu.tools > menu.tools.macros > menu.tools.macros_stop]] menghentikannya, dan semua perubahan satu kali jalan menjadi satu langkah urung. [[menu.tools > menu.tools.macros > menu.tools.macro_editor]] (<kbd>Alt+F11</kbd>) menampilkan dan menyunting kode. Makro yang memanggil fungsi Windows atau model objek editor itu sendiri tidak berjalan.
+ModelaDraw menjalankan proyek makro VBA yang ditulis untuk program menggambar (versi desktop). [[menu.tools > menu.tools.macros > menu.tools.macros_load]] menambahkan proyek (`.gms`) atau berkas modul (`.bas`, `.cls`, `.frm`); proyek disimpan dan dimuat saat program dibuka. [[docker.macros]] menampilkan makronya: klik dua kali salah satunya atau gunakan [[menu.tools > menu.tools.macros > menu.tools.macros_run]] (<kbd>Alt+Shift+F8</kbd>) untuk menjalankannya. Formulir, kotak pesan, dan kotak input makro muncul di layar, <kbd>Esc</kbd> atau [[menu.tools > menu.tools.macros > menu.tools.macros_stop]] menghentikannya, dan semua perubahan satu kali jalan menjadi satu langkah urung. [[menu.tools > menu.tools.macros > menu.tools.macro_editor]] (<kbd>Alt+F11</kbd>) menampilkan dan menyunting kode. Makro yang memanggil fungsi Windows atau model objek editor itu sendiri tidak berjalan.

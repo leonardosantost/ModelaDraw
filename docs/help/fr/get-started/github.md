@@ -1,6 +1,6 @@
 # Conserver des dessins sur GitHub
 
-TraceDraw peut ouvrir des dessins depuis un dépôt GitHub et les y
+ModelaDraw peut ouvrir des dessins depuis un dépôt GitHub et les y
 enregistrer sous forme de commits, sur le bureau comme dans le navigateur.
 Chaque enregistrement devient une version dans l'historique du dépôt, que
 vous pouvez rouvrir plus tard. Les commandes se trouvent dans
@@ -13,7 +13,7 @@ pour enregistrer, créez sur GitHub un jeton d'accès personnel à granularité
 fine, avec un accès en lecture et en écriture au contenu du dépôt, et
 collez-le dans le champ [[github.token]].
 
-Le jeton est conservé tant que TraceDraw fonctionne. Cochez
+Le jeton est conservé tant que ModelaDraw fonctionne. Cochez
 [[github.remember_token]] pour le garder pour la fois suivante ; il est alors
 stocké en clair dans vos préférences (dans le navigateur, dans le stockage
 de ce navigateur). Les boîtes de dialogue retiennent aussi le dernier dépôt,

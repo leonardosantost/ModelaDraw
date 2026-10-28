@@ -12,6 +12,8 @@ de la paleta de colores y el aspecto de la interfaz. Elija uno en
 ## Espacios de trabajo integrados {#built-in}
 
 - [[menu.window.workspace_default]]: la configuración habitual.
+- [[menu.window.workspace_modeling]]: la configuración de diseño completa con el panel Modela Nesting abierto.
+- [[menu.window.workspace_embroidery]]: el panel Bordado (tipos de puntada, secuencia, bastidor, tela e hilos) y la barra de bordado.
 - [[menu.window.workspace_lite]]: menos barras, para empezar.
 - [[menu.window.workspace_classic]], [[menu.window.workspace_illustration]] y
   [[menu.window.workspace_page_layout]]: barras y paneles para esos tipos de
@@ -23,7 +25,7 @@ de la paleta de colores y el aspecto de la interfaz. Elija uno en
 
 ## Qué se conserva {#kept}
 
-Todo lo que cambia se conserva cuando TraceDraw se cierra y vuelve la próxima
+Todo lo que cambia se conserva cuando ModelaDraw se cierra y vuelve la próxima
 vez: las opciones, dónde está cada barra y qué barras se muestran, la
 herramienta que muestra cada grupo de la caja de herramientas, los paneles
 abiertos, las unidades, el ajuste, los ajustes que toman los objetos nuevos y

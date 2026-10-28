@@ -3,7 +3,7 @@
      by the build as the GitHub artifact "unsigned-programs". -->
 <artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
   <zip-file>
-    <pe-file path="tracedraw.exe">
+    <pe-file path="modeladraw.exe">
       <authenticode-sign />
     </pe-file>
     <pe-file path="tracedraw-cli.exe">

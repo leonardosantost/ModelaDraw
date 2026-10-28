@@ -6,10 +6,10 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "TraceDraw: an open-source vector illustration editor"
+description = "ModelaDraw: vector design, pattern making and embroidery, powered by TraceDraw"
 
 [[bin]]
-name = "tracedraw"
+name = "modeladraw"
 path = "src/main.rs"
 
 [build-dependencies]
@@ -79,18 +79,18 @@ lopdf = { version = "0.36", default-features = false }
 tracedraw-core = { workspace = true, features = ["test-profiles"] }
 
 [package.metadata.deb]
-name = "tracedraw"
-maintainer = "TraceDraw contributors <noreply@tracedraw.dev>"
+name = "modeladraw"
+maintainer = "ModelaDraw contributors <noreply@github.com>"
 copyright = "2026, Ighor Toth and the TraceDraw contributors"
 license-file = ["../../LICENSE-MIT", "0"]
-extended-description = "Open-source vector illustration editor with a classic desktop workflow and a .cdr reader."
+extended-description = "Vector design, pattern making and embroidery, powered by the TraceDraw open-source vector editor."
 section = "graphics"
 priority = "optional"
 depends = "$auto"
 assets = [
-    ["target/release/tracedraw", "usr/bin/", "755"],
+    ["target/release/modeladraw", "usr/bin/", "755"],
     ["target/release/tracedraw-cli", "usr/bin/", "755"],
-    ["../../packaging/linux/tracedraw.desktop", "usr/share/applications/", "644"],
-    ["../../assets/icon/tracedraw-256.png", "usr/share/icons/hicolor/256x256/apps/tracedraw.png", "644"],
-    ["../../README.md", "usr/share/doc/tracedraw/README", "644"],
+    ["../../packaging/linux/modeladraw.desktop", "usr/share/applications/", "644"],
+    ["../../assets/icon/tracedraw-256.png", "usr/share/icons/hicolor/256x256/apps/modeladraw.png", "644"],
+    ["../../README.md", "usr/share/doc/modeladraw/README", "644"],
 ]

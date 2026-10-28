@@ -12,7 +12,7 @@
   <Identity Name="{IDENTITY}" Publisher="{PUBLISHER}" Version="{VERSION}" ProcessorArchitecture="x64" />
 
   <Properties>
-    <DisplayName>TraceDraw</DisplayName>
+    <DisplayName>ModelaDraw</DisplayName>
     <PublisherDisplayName>{PUBLISHER_NAME}</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -37,9 +37,9 @@
   </Resources>
 
   <Applications>
-    <Application Id="TraceDraw" Executable="tracedraw.exe" EntryPoint="Windows.FullTrustApplication">
+    <Application Id="ModelaDraw" Executable="modeladraw.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="TraceDraw"
+        DisplayName="ModelaDraw"
         Description="Open-source vector editor"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
@@ -49,7 +49,7 @@
       <Extensions>
         <uap:Extension Category="windows.fileTypeAssociation">
           <uap:FileTypeAssociation Name="tdraw">
-            <uap:DisplayName>TraceDraw Document</uap:DisplayName>
+            <uap:DisplayName>ModelaDraw Document</uap:DisplayName>
             <uap:SupportedFileTypes>
               <uap:FileType>.tdraw</uap:FileType>
             </uap:SupportedFileTypes>
@@ -63,18 +63,18 @@
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
         </uap:Extension>
-        <uap3:Extension Category="windows.appExecutionAlias" Executable="tracedraw.exe" EntryPoint="Windows.FullTrustApplication">
+        <uap3:Extension Category="windows.appExecutionAlias" Executable="modeladraw.exe" EntryPoint="Windows.FullTrustApplication">
           <uap3:AppExecutionAlias>
-            <desktop:ExecutionAlias Alias="tracedraw.exe" />
+            <desktop:ExecutionAlias Alias="modeladraw.exe" />
           </uap3:AppExecutionAlias>
         </uap3:Extension>
       </Extensions>
     </Application>
-    <Application Id="TraceDrawCli" Executable="tracedraw-cli.exe" EntryPoint="Windows.FullTrustApplication"
+    <Application Id="ModelaDrawCli" Executable="tracedraw-cli.exe" EntryPoint="Windows.FullTrustApplication"
       desktop4:Subsystem="console" desktop4:SupportsMultipleInstances="true">
       <uap:VisualElements
-        DisplayName="TraceDraw command line"
-        Description="TraceDraw command line"
+        DisplayName="ModelaDraw command line"
+        Description="ModelaDraw command line"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"

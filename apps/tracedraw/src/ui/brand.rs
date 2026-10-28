@@ -155,12 +155,13 @@ pub fn curves(painter: &Painter, r: Rect, scale: f32, nodes: &[f32]) {
     }
 }
 
-/// "TraceDraw" laid out in the bold face at `size`: "Trace" in white,
-/// "Draw" in the light blue accent.
+/// "ModelaDraw" laid out in the bold face at `size`: "Modela" in white,
+/// "Draw" in the light blue accent; under it, smaller, "powered by
+/// TraceDraw".
 pub fn name_galley(painter: &Painter, size: f32) -> Arc<egui::Galley> {
     let mut job = egui::text::LayoutJob::default();
     let font = crate::theme::bold(size);
-    for (part, color) in [("Trace", Color32::WHITE), ("Draw", NAME_ACCENT)] {
+    for (part, color) in [("Modela", Color32::WHITE), ("Draw", NAME_ACCENT)] {
         job.append(
             part,
             0.0,
@@ -171,6 +172,15 @@ pub fn name_galley(painter: &Painter, size: f32) -> Arc<egui::Galley> {
             },
         );
     }
+    job.append(
+        &format!("\n{}", crate::POWERED_BY),
+        0.0,
+        egui::TextFormat {
+            font_id: egui::FontId::proportional((size * 0.36).max(9.0)),
+            color: TAGLINE,
+            ..Default::default()
+        },
+    );
     painter.layout_job(job)
 }
 

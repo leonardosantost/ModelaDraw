@@ -14,9 +14,9 @@ use serde::Deserialize;
 use std::sync::{Arc, Mutex};
 
 /// The project's latest release, as GitHub describes it.
-pub const LATEST_URL: &str = "https://api.github.com/repos/igtoth/tracedraw/releases/latest";
+pub const LATEST_URL: &str = "https://api.github.com/repos/leonardosantost/ModelaDraw/releases/latest";
 /// The release list, for when no download fits this system.
-pub const RELEASES_PAGE: &str = "https://github.com/igtoth/tracedraw/releases";
+pub const RELEASES_PAGE: &str = "https://github.com/leonardosantost/ModelaDraw/releases";
 /// How often the check at start runs, seconds.
 pub const DAILY: u64 = 24 * 60 * 60;
 
@@ -143,16 +143,16 @@ pub fn asset_names(version: &str, os: &str, arch: &str, kind: Kind) -> Vec<Strin
     let one = match (os, kind) {
         ("linux", Kind::AppImage) if arch == "x86_64" => {
             return vec![
-                format!("tracedraw-{version}-linux-amd64.AppImage"),
-                format!("tracedraw-{version}-linux-x86_64.AppImage"),
+                format!("modeladraw-{version}-linux-amd64.AppImage"),
+                format!("modeladraw-{version}-linux-x86_64.AppImage"),
             ];
         }
-        ("linux", Kind::AppImage) => format!("tracedraw-{version}-linux-{a}.AppImage"),
-        ("linux", Kind::Tarball) => format!("tracedraw-{version}-linux-{a}.tar.gz"),
+        ("linux", Kind::AppImage) => format!("modeladraw-{version}-linux-{a}.AppImage"),
+        ("linux", Kind::Tarball) => format!("modeladraw-{version}-linux-{a}.tar.gz"),
         ("linux", Kind::Deb) => format!("tracedraw_{version}_{deb}.deb"),
-        ("windows", Kind::Setup) => format!("tracedraw-{version}-windows-{a}-setup.exe"),
-        ("windows", Kind::Portable) => format!("tracedraw-{version}-windows-{a}-portable.zip"),
-        ("macos", Kind::Dmg) => format!("tracedraw-{version}-macos-{a}.dmg"),
+        ("windows", Kind::Setup) => format!("modeladraw-{version}-windows-{a}-setup.exe"),
+        ("windows", Kind::Portable) => format!("modeladraw-{version}-windows-{a}-portable.zip"),
+        ("macos", Kind::Dmg) => format!("modeladraw-{version}-macos-{a}.dmg"),
         _ => return Vec::new(),
     };
     vec![one]
@@ -515,7 +515,7 @@ fn download(url: &str) -> Result<Box<dyn std::io::Read + Send>, String> {
             .build()
             .header(
                 "User-Agent",
-                concat!("TraceDraw/", env!("CARGO_PKG_VERSION")),
+                concat!("ModelaDraw/", env!("CARGO_PKG_VERSION")),
             )
             .call()
             .map_err(|e| e.to_string())?;
@@ -553,7 +553,7 @@ fn fetch() -> Result<String, String> {
         .get(LATEST_URL)
         .header(
             "User-Agent",
-            concat!("TraceDraw/", env!("CARGO_PKG_VERSION")),
+            concat!("ModelaDraw/", env!("CARGO_PKG_VERSION")),
         )
         .header("Accept", "application/vnd.github+json")
         .call()
@@ -578,14 +578,14 @@ mod tests {
         "prerelease": false,
         "draft": false,
         "assets": [
-            {"name": "tracedraw-0.5.0-linux-arm64.AppImage", "browser_download_url": "https://x/tracedraw-0.5.0-linux-arm64.AppImage", "size": 7, "digest": "sha256:68e481c13fc5dc04ed6b106a9f801e1fa2689889f070a02b4fb89e8cb29c91ef"},
-            {"name": "tracedraw-0.5.0-linux-arm64.tar.gz", "browser_download_url": "https://x/tracedraw-0.5.0-linux-arm64.tar.gz"},
-            {"name": "tracedraw-0.5.0-linux-x86_64.AppImage", "browser_download_url": "https://x/tracedraw-0.5.0-linux-x86_64.AppImage", "size": 5, "digest": "sha256:2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824"},
-            {"name": "tracedraw-0.5.0-linux-x86_64.tar.gz", "browser_download_url": "https://x/tracedraw-0.5.0-linux-x86_64.tar.gz"},
-            {"name": "tracedraw-0.5.0-macos-arm64.dmg", "browser_download_url": "https://x/tracedraw-0.5.0-macos-arm64.dmg"},
-            {"name": "tracedraw-0.5.0-macos-x86_64.dmg", "browser_download_url": "https://x/tracedraw-0.5.0-macos-x86_64.dmg"},
-            {"name": "tracedraw-0.5.0-windows-x86_64-portable.zip", "browser_download_url": "https://x/tracedraw-0.5.0-windows-x86_64-portable.zip"},
-            {"name": "tracedraw-0.5.0-windows-x86_64-setup.exe", "browser_download_url": "https://x/tracedraw-0.5.0-windows-x86_64-setup.exe"},
+            {"name": "modeladraw-0.5.0-linux-arm64.AppImage", "browser_download_url": "https://x/modeladraw-0.5.0-linux-arm64.AppImage", "size": 7, "digest": "sha256:68e481c13fc5dc04ed6b106a9f801e1fa2689889f070a02b4fb89e8cb29c91ef"},
+            {"name": "modeladraw-0.5.0-linux-arm64.tar.gz", "browser_download_url": "https://x/modeladraw-0.5.0-linux-arm64.tar.gz"},
+            {"name": "modeladraw-0.5.0-linux-x86_64.AppImage", "browser_download_url": "https://x/modeladraw-0.5.0-linux-x86_64.AppImage", "size": 5, "digest": "sha256:2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824"},
+            {"name": "modeladraw-0.5.0-linux-x86_64.tar.gz", "browser_download_url": "https://x/modeladraw-0.5.0-linux-x86_64.tar.gz"},
+            {"name": "modeladraw-0.5.0-macos-arm64.dmg", "browser_download_url": "https://x/modeladraw-0.5.0-macos-arm64.dmg"},
+            {"name": "modeladraw-0.5.0-macos-x86_64.dmg", "browser_download_url": "https://x/modeladraw-0.5.0-macos-x86_64.dmg"},
+            {"name": "modeladraw-0.5.0-windows-x86_64-portable.zip", "browser_download_url": "https://x/modeladraw-0.5.0-windows-x86_64-portable.zip"},
+            {"name": "modeladraw-0.5.0-windows-x86_64-setup.exe", "browser_download_url": "https://x/modeladraw-0.5.0-windows-x86_64-setup.exe"},
             {"name": "tracedraw_0.5.0_amd64.deb", "browser_download_url": "https://x/tracedraw_0.5.0_amd64.deb"},
             {"name": "tracedraw_0.5.0_arm64.deb", "browser_download_url": "https://x/tracedraw_0.5.0_arm64.deb"}
         ]
@@ -625,25 +625,25 @@ mod tests {
                 "linux",
                 "x86_64",
                 AppImage,
-                "tracedraw-0.5.0-linux-x86_64.AppImage",
+                "modeladraw-0.5.0-linux-x86_64.AppImage",
             ),
             (
                 "linux",
                 "aarch64",
                 AppImage,
-                "tracedraw-0.5.0-linux-arm64.AppImage",
+                "modeladraw-0.5.0-linux-arm64.AppImage",
             ),
             (
                 "linux",
                 "x86_64",
                 Tarball,
-                "tracedraw-0.5.0-linux-x86_64.tar.gz",
+                "modeladraw-0.5.0-linux-x86_64.tar.gz",
             ),
             (
                 "linux",
                 "aarch64",
                 Tarball,
-                "tracedraw-0.5.0-linux-arm64.tar.gz",
+                "modeladraw-0.5.0-linux-arm64.tar.gz",
             ),
             ("linux", "x86_64", Deb, "tracedraw_0.5.0_amd64.deb"),
             ("linux", "aarch64", Deb, "tracedraw_0.5.0_arm64.deb"),
@@ -651,16 +651,16 @@ mod tests {
                 "windows",
                 "x86_64",
                 Setup,
-                "tracedraw-0.5.0-windows-x86_64-setup.exe",
+                "modeladraw-0.5.0-windows-x86_64-setup.exe",
             ),
             (
                 "windows",
                 "x86_64",
                 Portable,
-                "tracedraw-0.5.0-windows-x86_64-portable.zip",
+                "modeladraw-0.5.0-windows-x86_64-portable.zip",
             ),
-            ("macos", "aarch64", Dmg, "tracedraw-0.5.0-macos-arm64.dmg"),
-            ("macos", "x86_64", Dmg, "tracedraw-0.5.0-macos-x86_64.dmg"),
+            ("macos", "aarch64", Dmg, "modeladraw-0.5.0-macos-arm64.dmg"),
+            ("macos", "x86_64", Dmg, "modeladraw-0.5.0-macos-x86_64.dmg"),
         ];
         for (os, arch, kind, want) in cases {
             assert_eq!(
@@ -719,8 +719,8 @@ mod tests {
         assert!(r.appimage.is_none(), "no install in place either");
         // Names that only end like this system's file do not count.
         let lookalike = SAMPLE.replace(
-            "tracedraw-0.5.0-linux-x86_64.AppImage\", \"browser",
-            "tracedraw-0.5.0-linux-x86_64.AppImage.zsync\", \"browser",
+            "modeladraw-0.5.0-linux-x86_64.AppImage\", \"browser",
+            "modeladraw-0.5.0-linux-x86_64.AppImage.zsync\", \"browser",
         );
         assert_eq!(pick_in(&lookalike, "linux", "x86_64", AppImage), None);
     }
@@ -736,33 +736,33 @@ mod tests {
         let renamed = SAMPLE.replace("linux-x86_64.AppImage", "linux-amd64.AppImage");
         assert_eq!(
             pick_in(&renamed, "linux", "x86_64", AppImage).as_deref(),
-            Some("tracedraw-0.5.0-linux-amd64.AppImage")
+            Some("modeladraw-0.5.0-linux-amd64.AppImage")
         );
         let p = parse_latest(&renamed, "0.4.0", "linux", "x86_64", AppImage)
             .expect("parses")
             .expect("newer")
             .appimage
             .expect("appimage");
-        assert_eq!(p.url, "https://x/tracedraw-0.5.0-linux-amd64.AppImage");
+        assert_eq!(p.url, "https://x/modeladraw-0.5.0-linux-amd64.AppImage");
         assert_eq!(p.size, 5);
         // The tar.gz keeps its name; arm64 is unchanged.
         assert_eq!(
             pick_in(&renamed, "linux", "x86_64", Tarball).as_deref(),
-            Some("tracedraw-0.5.0-linux-x86_64.tar.gz")
+            Some("modeladraw-0.5.0-linux-x86_64.tar.gz")
         );
         assert_eq!(
             pick_in(&renamed, "linux", "aarch64", AppImage).as_deref(),
-            Some("tracedraw-0.5.0-linux-arm64.AppImage")
+            Some("modeladraw-0.5.0-linux-arm64.AppImage")
         );
         // With both names in a release the amd64 one wins, in any order.
         let both = SAMPLE.replace(
-            r#"{"name": "tracedraw-0.5.0-linux-x86_64.tar.gz""#,
-            r#"{"name": "tracedraw-0.5.0-linux-amd64.AppImage", "browser_download_url": "https://x/tracedraw-0.5.0-linux-amd64.AppImage"},
-            {"name": "tracedraw-0.5.0-linux-x86_64.tar.gz""#,
+            r#"{"name": "modeladraw-0.5.0-linux-x86_64.tar.gz""#,
+            r#"{"name": "modeladraw-0.5.0-linux-amd64.AppImage", "browser_download_url": "https://x/modeladraw-0.5.0-linux-amd64.AppImage"},
+            {"name": "modeladraw-0.5.0-linux-x86_64.tar.gz""#,
         );
         assert_eq!(
             pick_in(&both, "linux", "x86_64", AppImage).as_deref(),
-            Some("tracedraw-0.5.0-linux-amd64.AppImage")
+            Some("modeladraw-0.5.0-linux-amd64.AppImage")
         );
         let reversed = {
             let mut v: serde_json::Value = serde_json::from_str(&both).expect("json");
@@ -771,12 +771,12 @@ mod tests {
         };
         assert_eq!(
             pick_in(&reversed, "linux", "x86_64", AppImage).as_deref(),
-            Some("tracedraw-0.5.0-linux-amd64.AppImage")
+            Some("modeladraw-0.5.0-linux-amd64.AppImage")
         );
         // Names that only end like the file do not count.
         let lookalike = renamed.replace(
-            "tracedraw-0.5.0-linux-amd64.AppImage\", \"browser",
-            "tracedraw-0.5.0-linux-amd64.AppImage.zsync\", \"browser",
+            "modeladraw-0.5.0-linux-amd64.AppImage\", \"browser",
+            "modeladraw-0.5.0-linux-amd64.AppImage.zsync\", \"browser",
         );
         assert_eq!(pick_in(&lookalike, "linux", "x86_64", AppImage), None);
         // What an updater of 0.19.8 does: the first AppImage of the list
@@ -791,7 +791,7 @@ mod tests {
         names.sort_unstable();
         assert_eq!(
             names.iter().find(|n| n.ends_with(".AppImage")).copied(),
-            Some("tracedraw-0.5.0-linux-amd64.AppImage")
+            Some("modeladraw-0.5.0-linux-amd64.AppImage")
         );
         // The release script gives the x86_64 AppImage that name.
         let script = include_str!("../../../packaging/linux/build-appimage.sh");
@@ -848,7 +848,7 @@ mod tests {
             .expect("parses")
             .expect("newer");
         let p = r.appimage.expect("appimage");
-        assert_eq!(p.url, "https://x/tracedraw-0.5.0-linux-x86_64.AppImage");
+        assert_eq!(p.url, "https://x/modeladraw-0.5.0-linux-x86_64.AppImage");
         assert_eq!(p.size, 5);
         assert_eq!(
             p.sha256,
@@ -868,7 +868,7 @@ mod tests {
             .expect("newer")
             .appimage
             .expect("appimage");
-        assert_eq!(arm.url, "https://x/tracedraw-0.5.0-linux-arm64.AppImage");
+        assert_eq!(arm.url, "https://x/modeladraw-0.5.0-linux-arm64.AppImage");
         assert_eq!(arm.size, 7);
         assert!(arm.sha256.starts_with("68e481c1"));
         let bad = SAMPLE.replace("sha256:2CF2", "md5:2CF2");
@@ -880,7 +880,7 @@ mod tests {
     fn installing_replaces_the_file_only_when_it_checks_out() {
         let dir = std::env::temp_dir().join(format!("td-install-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
-        let target = dir.join("TraceDraw.AppImage");
+        let target = dir.join("ModelaDraw.AppImage");
         std::fs::write(&target, b"old").expect("write");
         #[cfg(unix)]
         {
@@ -894,7 +894,7 @@ mod tests {
             sha256: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824".into(),
             size: 5,
         };
-        let part = dir.join(".TraceDraw.AppImage.update");
+        let part = dir.join(".ModelaDraw.AppImage.update");
         // A wrong digest, a short and a long download leave it alone.
         for (body, pkg) in [
             (&b"hellp"[..], good.clone()),
@@ -942,7 +942,7 @@ mod tests {
         );
         let dir = std::env::temp_dir().join(format!("td-live-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
-        let target = dir.join("TraceDraw.AppImage");
+        let target = dir.join("ModelaDraw.AppImage");
         std::fs::write(&target, b"old").expect("write");
         let installer = Installer::default();
         installer.start(r.version.clone(), p.clone(), target.clone(), None);

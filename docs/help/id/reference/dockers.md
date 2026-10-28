@@ -56,6 +56,6 @@ panel dan halaman yang menjelaskannya.
   melipat panel.
 - Tombol tutup di bilah judul panel mengeluarkannya dari tab; tombol ciutkan
   melipat area panel.
-- Panel yang Anda biarkan terbuka kembali saat TraceDraw dimulai lagi.
+- Panel yang Anda biarkan terbuka kembali saat ModelaDraw dimulai lagi.
 - Pintasan panel bersifat bolak-balik: menekannya saat panelnya di depan
   menyembunyikan panel.

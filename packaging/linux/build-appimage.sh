@@ -9,15 +9,15 @@ case "$ARCH" in arm64) TOOL_ARCH=aarch64; NAME=arm64 ;; *) TOOL_ARCH=x86_64; NAM
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 DIR="$ROOT/dist/AppDir"; rm -rf "$DIR"
 mkdir -p "$DIR/usr/bin" "$DIR/usr/share/applications" "$DIR/usr/share/icons/hicolor/256x256/apps"
-cp "$BIN/tracedraw" "$BIN/tracedraw-cli" "$DIR/usr/bin/"
-cp "$ROOT/packaging/linux/tracedraw.desktop" "$DIR/usr/share/applications/"
-cp "$ROOT/assets/icon/tracedraw-256.png" "$DIR/usr/share/icons/hicolor/256x256/apps/tracedraw.png"
+cp "$BIN/modeladraw" "$BIN/tracedraw-cli" "$DIR/usr/bin/"
+cp "$ROOT/packaging/linux/modeladraw.desktop" "$DIR/usr/share/applications/"
+cp "$ROOT/assets/icon/tracedraw-256.png" "$DIR/usr/share/icons/hicolor/256x256/apps/modeladraw.png"
 TOOL="$ROOT/dist/linuxdeploy.AppImage"
 [ -f "$TOOL" ] || curl -sSL -o "$TOOL" https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-$TOOL_ARCH.AppImage
 chmod +x "$TOOL"
 cd "$ROOT/dist"
-OUT="tracedraw-$VERSION-linux-$NAME.AppImage"
+OUT="modeladraw-$VERSION-linux-$NAME.AppImage"
 VERSION="$VERSION" ARCH="$TOOL_ARCH" OUTPUT="$OUT" "$TOOL" --appimage-extract-and-run \
-  --appdir "$DIR" --desktop-file "$DIR/usr/share/applications/tracedraw.desktop" \
-  --icon-file "$DIR/usr/share/icons/hicolor/256x256/apps/tracedraw.png" --output appimage
+  --appdir "$DIR" --desktop-file "$DIR/usr/share/applications/modeladraw.desktop" \
+  --icon-file "$DIR/usr/share/icons/hicolor/256x256/apps/modeladraw.png" --output appimage
 rm -rf "$DIR"

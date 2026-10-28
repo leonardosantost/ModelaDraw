@@ -1,23 +1,23 @@
-# Параметры TraceDraw
+# Параметры ModelaDraw
 
 [[menu.tools > menu.tools.options > menu.tools.options_app]] (<kbd>Ctrl+J</kbd>)
 задаёт, как работает программа. Выберите страницу в списке слева.
 
 ## Общие {#general}
 
-![Страница «Общие» параметров TraceDraw](../../img/customize-options-app-general.png)
+![Страница «Общие» параметров ModelaDraw](../../img/customize-options-app-general.png)
 
 - [[options.on_startup]]: показать экран приветствия, начать новый документ
   или открыть последний редактировавшийся документ.
 - [[options.show_new_document_dialog]] (включено): спрашивать параметры
   нового рисунка; см. [Создание рисунка](../get-started/new-document.md).
 - [[options.show_splash]] (включено).
-- [[options.hardware_acceleration]] (вкл.): окно рисуется видеокартой, выбранной рядом (сначала [[options.gpu_automatic]]); выкл. — программным рендерером компьютера. Действует со следующего запуска. Если окно так не открывается, TraceDraw запускается снова с программным рендерером, затем с OpenGL, и запоминает сработавший.
+- [[options.hardware_acceleration]] (вкл.): окно рисуется видеокартой, выбранной рядом (сначала [[options.gpu_automatic]]); выкл. — программным рендерером компьютера. Действует со следующего запуска. Если окно так не открывается, ModelaDraw запускается снова с программным рендерером, затем с OpenGL, и запоминает сработавший.
 - [[options.undo_levels]]: сколько шагов можно отменить (по умолчанию 150).
 
 ## Отображение {#display}
 
-![Страница «Отображение» параметров TraceDraw](../../img/customize-options-app-display.png)
+![Страница «Отображение» параметров ModelaDraw](../../img/customize-options-app-display.png)
 
 - [[menu.view.proof_colors]]: показывать цвета такими, какими они будут
   напечатаны.
@@ -33,7 +33,7 @@
 
 ## Правка {#edit}
 
-![Страница «Правка» параметров TraceDraw](../../img/customize-options-app-edit.png)
+![Страница «Правка» параметров ModelaDraw](../../img/customize-options-app-edit.png)
 
 - [[options.constrain_angle]]: шаг <kbd>Ctrl</kbd> при повороте и рисовании
   (по умолчанию 15 градусов).
@@ -44,7 +44,7 @@
 
 ## Узлы и маркеры {#nodes-and-handles}
 
-![Страница «Узлы и маркеры» параметров TraceDraw](../../img/customize-options-app-nodes-and-handles.png)
+![Страница «Узлы и маркеры» параметров ModelaDraw](../../img/customize-options-app-nodes-and-handles.png)
 
 - [[options.node_size]]: маленький, средний или большой.
 - [[options.node_shape]] для узлов [[options.node_cusp]],
@@ -57,7 +57,7 @@
 
 ## Рамка обрезки {#clip-frame}
 
-![Страница «Рамка обрезки» параметров TraceDraw](../../img/customize-options-app-clip-frame.png)
+![Страница «Рамка обрезки» параметров ModelaDraw](../../img/customize-options-app-clip-frame.png)
 
 - [[options.auto_center]]: [[options.auto_center_outside]] (по умолчанию),
   [[options.auto_center_always]] или [[options.auto_center_never]].
@@ -67,7 +67,7 @@
 
 ## Привязка {#snapping}
 
-![Страница «Привязка» параметров TraceDraw](../../img/customize-options-app-snapping.png)
+![Страница «Привязка» параметров ModelaDraw](../../img/customize-options-app-snapping.png)
 
 - [[options.snap_to_objects]], [[options.snap_to_page]],
   [[options.snap_to_guidelines]], [[options.snap_to_grid]], сетка базовых
@@ -81,7 +81,7 @@
 
 ## Сохранение {#save}
 
-![Страница «Сохранение» параметров TraceDraw](../../img/customize-options-app-save.png)
+![Страница «Сохранение» параметров ModelaDraw](../../img/customize-options-app-save.png)
 
 - [[options.backup]]: [[options.backup_before_save]] (включено) сохраняет
   предыдущий файл как `backup_of_<name>`, [[options.backup_to]]
@@ -93,7 +93,7 @@
 
 ## Текст {#text}
 
-![Страница «Текст» параметров TraceDraw](../../img/customize-options-app-text.png)
+![Страница «Текст» параметров ModelaDraw](../../img/customize-options-app-text.png)
 
 На странице пять вкладок.
 

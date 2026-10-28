@@ -670,7 +670,7 @@ def page_html(code, langs, ui, tree, pages, order, n, up):
 {notice}{body}
 </article>
 <nav class="pager">{prev_link}{next_link}</nav>
-<footer>TraceDraw</footer>
+<footer>ModelaDraw</footer>
 </main>
 </div>
 <script>var HELP={cfg};</script>
@@ -683,7 +683,7 @@ def page_html(code, langs, ui, tree, pages, order, n, up):
 def redirect_html(codes):
     return """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TraceDraw Help</title>
+<title>ModelaDraw Help</title>
 <script>
 (function(){var codes=%s,pick="en";
 var want=(navigator.languages||[navigator.language||"en"]);
@@ -698,7 +698,7 @@ for(var i=0;i<want.length&&pick==="en";i++){var w=want[i];
 location.replace(pick+"/index.html"+location.hash);})();
 </script>
 <noscript><meta http-equiv="refresh" content="0; url=en/index.html"></noscript>
-</head><body><a href="en/index.html">TraceDraw Help</a></body></html>
+</head><body><a href="en/index.html">ModelaDraw Help</a></body></html>
 """ % json.dumps(codes)
 
 

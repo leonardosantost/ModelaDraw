@@ -399,6 +399,8 @@
 | [[menu.window.dock_window]] | [The workspace](../get-started/workspace.md#several-drawings) |
 | [[menu.window.workspace]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_default]] | [Workspaces](../customize/workspaces.md) |
+| [[menu.window.workspace_modeling]] | [Workspaces](../customize/workspaces.md) |
+| [[menu.window.workspace_embroidery]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_lite]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_classic]] | [Workspaces](../customize/workspaces.md) |
 | [[menu.window.workspace_illustration]] | [Workspaces](../customize/workspaces.md) |
@@ -431,17 +433,17 @@
 
 | الأمر | انظر |
 |---|---|
-| [[menu.help.help_topics]] | [مرحبًا بك في تعليمات TraceDraw](../index.md#in-the-app) |
-| [[menu.help.product_help]] | [مرحبًا بك في تعليمات TraceDraw](../index.md#in-the-app) |
-| [[menu.help.welcome_screen]] | [حول TraceDraw والتحديثات](../welcome/about-and-updates.md) |
-| [[menu.help.video_tutorials]] | [حول TraceDraw والتحديثات](../welcome/about-and-updates.md) |
+| [[menu.help.help_topics]] | [مرحبًا بك في تعليمات ModelaDraw](../index.md#in-the-app) |
+| [[menu.help.product_help]] | [مرحبًا بك في تعليمات ModelaDraw](../index.md#in-the-app) |
+| [[menu.help.welcome_screen]] | [حول ModelaDraw والتحديثات](../welcome/about-and-updates.md) |
+| [[menu.help.video_tutorials]] | [حول ModelaDraw والتحديثات](../welcome/about-and-updates.md) |
 | [[menu.help.hints]] | [The Hints panel](../get-started/hints.md) |
-| [[menu.help.quick_start_guide]] | [حول TraceDraw والتحديثات](../welcome/about-and-updates.md) |
-| [[menu.help.user_guide]] | [حول TraceDraw والتحديثات](../welcome/about-and-updates.md) |
+| [[menu.help.quick_start_guide]] | [حول ModelaDraw والتحديثات](../welcome/about-and-updates.md) |
+| [[menu.help.user_guide]] | [حول ModelaDraw والتحديثات](../welcome/about-and-updates.md) |
 | [[menu.help.whats_new]] | [ما الجديد](../welcome/whats-new.md) |
 | [[menu.help.highlight_whats_new]] | [ما الجديد](../welcome/whats-new.md) |
-| [[menu.help.updates]] | [حول TraceDraw والتحديثات](../welcome/about-and-updates.md) |
-| [[menu.help.message_settings]] | [حول TraceDraw والتحديثات](../welcome/about-and-updates.md) |
-| [[menu.help.community]] | [حول TraceDraw والتحديثات](../welcome/about-and-updates.md) |
-| [[menu.help.support]] | [حول TraceDraw والتحديثات](../welcome/about-and-updates.md) |
-| [[menu.help.about]] | [حول TraceDraw والتحديثات](../welcome/about-and-updates.md) |
+| [[menu.help.updates]] | [حول ModelaDraw والتحديثات](../welcome/about-and-updates.md) |
+| [[menu.help.message_settings]] | [حول ModelaDraw والتحديثات](../welcome/about-and-updates.md) |
+| [[menu.help.community]] | [حول ModelaDraw والتحديثات](../welcome/about-and-updates.md) |
+| [[menu.help.support]] | [حول ModelaDraw والتحديثات](../welcome/about-and-updates.md) |
+| [[menu.help.about]] | [حول ModelaDraw والتحديثات](../welcome/about-and-updates.md) |

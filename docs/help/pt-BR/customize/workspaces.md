@@ -29,7 +29,7 @@ direito, em [[menu.window > menu.window.workspace]], ou na página
 
 ## O que é guardado {#kept}
 
-Tudo o que você muda é guardado quando o TraceDraw fecha e volta na próxima
+Tudo o que você muda é guardado quando o ModelaDraw fecha e volta na próxima
 vez: as opções, onde cada barra fica e quais aparecem, a ferramenta que cada
 grupo da caixa de ferramentas mostra, os painéis abertos, unidades, encaixe, as
 configurações que os objetos novos recebem e o que a janela mostra.

@@ -323,7 +323,7 @@ pub fn main_window_builder(settings: &Settings, plain: bool) -> egui::ViewportBu
         .with_inner_size(main_window_size(settings.window_size, None))
         .with_min_inner_size(MIN_SIZE)
         .with_maximized(settings.window_maximized && !plain)
-        .with_title("TraceDraw")
+        .with_title(crate::APP_NAME)
 }
 
 /// Turn the splash window into the main window: decorations, resizable,

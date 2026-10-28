@@ -119,4 +119,4 @@ them. (<kbd>C</kbd> keeps making a node cusp here.)
   [Adding and editing text](../text/adding-text.md).
 
 The appearance of nodes and handles is set on the [[options.nodes_and_handles]]
-page of the options; see [TraceDraw options](../customize/options-app.md#nodes-and-handles).
+page of the options; see [ModelaDraw options](../customize/options-app.md#nodes-and-handles).

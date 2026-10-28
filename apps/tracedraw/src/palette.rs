@@ -424,7 +424,7 @@ pub fn parse_xml(bytes: &[u8]) -> Result<Vec<(String, Color)>, String> {
             "no <color> entries in this XML palette".into()
         } else {
             format!(
-                "none of its {entries} colours is in a colour space TraceDraw reads (spot colours are not read)"
+                "none of its {entries} colours is in a colour space ModelaDraw reads (spot colours are not read)"
             )
         });
     }

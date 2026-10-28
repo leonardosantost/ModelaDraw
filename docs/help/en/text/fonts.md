@@ -1,6 +1,6 @@
 # Fonts and glyphs
 
-TraceDraw uses the fonts installed on your computer, fonts you add in the
+ModelaDraw uses the fonts installed on your computer, fonts you add in the
 Font Manager, and fonts that come with a drawing. This page explains the
 panels and the dialog box for working with fonts and special characters.
 
@@ -88,7 +88,7 @@ To use the Font Manager:
 
 - **Add folder** scans a folder for font files (TTF, OTF, TTC, OTC); its fonts
   show as not installed. **Add font** installs one file at once.
-- **Install** makes the picked fonts available in TraceDraw, now and at every
+- **Install** makes the picked fonts available in ModelaDraw, now and at every
   start. **Uninstall** removes them; the system's own fonts are protected.
 - **Add to collection** and **Remove from collection** organize fonts; drag
   fonts onto Favorites or a collection to add them.

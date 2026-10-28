@@ -1,6 +1,6 @@
 # Writing tools
 
-TraceDraw checks spelling and grammar, finds synonyms, corrects as you type,
+ModelaDraw checks spelling and grammar, finds synonyms, corrects as you type,
 and fixes text that came in with the wrong characters. The commands are in
 [[menu.text > menu.text.writing_tools]] and the [[menu.text]] menu.
 
@@ -30,7 +30,7 @@ selected texts ([[writing.scope_selection]]).
 
 ### Dictionaries {#dictionaries}
 
-TraceDraw checks spelling with Hunspell dictionaries: for each language a
+ModelaDraw checks spelling with Hunspell dictionaries: for each language a
 `.dic` file and an `.aff` file with the same name, such as `pt_BR.dic` and
 `pt_BR.aff`. Free dictionaries for most languages can be downloaded from the
 projects that make them; other programs often install them too.
